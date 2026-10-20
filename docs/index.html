@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thor's Forecast Challenge 2026 | Forecast workbench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDF0F2; --panel:#FFFFFF; --panel-2:#F5F7F8; --ink:#141C26; --ink-2:#4A5767; --ink-3:#7E8A97;
+  --rule:#D3DAE0; --rule-2:#E5EAEE; --accent:#2D5D8C; --accent-ink:#FFFFFF; --steel:#1B2633; --steel-ink:#E8EEF4;
+  --gold:#B5862B; --edit:#B5730C; --edit-bg:#FFF4DF; --warn:#B23A2E; --warn-bg:#FBE9E6; --ok:#2F7A4A; --ok-bg:#E6F3EA;
+  --hi:rgba(47,122,74,.16); --mid:rgba(181,134,43,.16); --lo:rgba(178,58,46,.13);
+  --font:"Barlow","Segoe UI","Helvetica Neue",Arial,sans-serif; --cond:"Barlow Condensed","Arial Narrow","Segoe UI",Arial,sans-serif; --mono:"IBM Plex Mono",Consolas,"Liberation Mono",monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#0E141B; --panel:#151E28; --panel-2:#19232F; --ink:#E4EAF0; --ink-2:#A3B0BD; --ink-3:#738190; --rule:#283442; --rule-2:#1F2A36;
+  --accent:#7FB2E5; --accent-ink:#0B1A28; --steel:#0A1017; --steel-ink:#E4EAF0; --gold:#E2B456; --edit:#E3A53D; --edit-bg:#3A2A0E; --warn:#F08070; --warn-bg:#3B1C18; --ok:#6CC08A; --ok-bg:#16301F;
+  --hi:rgba(108,192,138,.18); --mid:rgba(226,180,86,.16); --lo:rgba(240,128,112,.14); color-scheme: dark; } }
+:root{ box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+*,*::before,*::after{ box-sizing:inherit; }
+body{ margin:0; background:var(--paper); color:var(--ink); font:15px/1.45 var(--font); font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased; }
+button,input,select,textarea{ font:inherit; color:inherit; }
+:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.top{ background:var(--steel); color:var(--steel-ink); padding:16px 28px 14px; display:grid; grid-template-columns:1fr auto; gap:12px 24px; align-items:center; }
+.top h1{ margin:0; font:700 26px/1 var(--cond); letter-spacing:.3px; }
+.top h1 span{ color:var(--gold); }
+.top .sub{ font-size:13.5px; opacity:.8; margin-top:4px; }
+.top .ctl{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+.top select,.top input{ background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.22); border-radius:8px; padding:7px 10px; color:var(--steel-ink); }
+.top select option{ color:#141C26; }
+.top input#team{ width:150px; text-transform:uppercase; }
+.custom{ grid-column:1 / -1; display:flex; gap:10px; align-items:center; font-size:13.5px; flex-wrap:wrap; }
+.custom input{ width:180px; }
+.custom[hidden]{ display:none; }
+.btn{ border:1px solid var(--rule); background:var(--panel); border-radius:8px; padding:7px 13px; cursor:pointer; font-weight:500; white-space:nowrap; }
+.btn:hover{ border-color:var(--ink-3); }
+.btn.primary{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:600; }
+.btn.sm{ padding:3px 9px; font-size:13px; }
+.btn.ghost{ background:transparent; }
+.top .btn{ background:transparent; color:var(--steel-ink); border-color:rgba(255,255,255,.3); }
+.statusline{ display:flex; gap:8px 22px; align-items:center; flex-wrap:wrap; padding:9px 28px; background:var(--panel); border-bottom:1px solid var(--rule); font-size:13.5px; color:var(--ink-2); }
+.statusline .live::before{ content:""; display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--ok); margin-right:7px; }
+#suspense b{ color:var(--ink); } #suspense.late{ color:var(--warn); }
+.statusline .sp{ flex:1; }
+.banner{ display:none; margin:12px 28px 0; padding:9px 14px; border-radius:8px; font-weight:500; }
+.banner.show{ display:block; } .banner.demo{ background:var(--edit-bg); color:var(--edit); }
+main{ padding:16px 28px 40px; display:grid; gap:16px; grid-template-columns:minmax(0, 1fr) 380px; align-items:start; }
+main > *{ min-width:0; }
+.col{ display:grid; gap:16px; min-width:0; }
+.panel{ background:var(--panel); border:1px solid var(--rule); border-radius:12px; padding:14px 16px; }
+.panel h2{ margin:0; font:700 21px/1.1 var(--cond); }
+.panel h2 span{ font:500 15px var(--font); color:var(--ink-2); margin-left:6px; }
+.panel h3{ margin:0 0 8px; font:700 15px var(--cond); color:var(--ink-2); letter-spacing:.3px; text-transform:uppercase; }
+.mut{ color:var(--ink-3); font-size:13px; }
+.tabs{ display:flex; gap:0; border:1px solid var(--rule); border-radius:10px; overflow:hidden; background:var(--panel); width:max-content; max-width:100%; }
+.tabs button{ border:0; background:transparent; padding:8px 18px; text-align:left; cursor:pointer; border-right:1px solid var(--rule); }
+.tabs button:last-child{ border-right:0; }
+.tabs .n{ display:block; font:700 18px/1.1 var(--cond); }
+.tabs .p{ display:block; font-size:12px; color:var(--ink-3); line-height:1.25; }
+.tabs button[aria-pressed="true"]{ background:var(--accent); color:var(--accent-ink); }
+.tabs button[aria-pressed="true"] .p{ color:inherit; opacity:.8; }
+#blockHead{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+.kv{ display:flex; gap:18px; flex-wrap:wrap; font-size:13.5px; color:var(--ink-2); align-items:center; }
+.kv b{ color:var(--ink); }
+table.fx{ width:100%; border-collapse:separate; border-spacing:0; }
+.fx th,.fx td{ border-bottom:1px solid var(--rule-2); padding:0; text-align:center; }
+.fx thead th{ font:600 13px/1.15 var(--cond); color:var(--ink-2); padding:6px 4px; border-bottom:2px solid var(--ink); }
+.fx thead th small{ display:block; font-weight:500; color:var(--ink-3); font-size:11.5px; }
+.fx th.hr{ text-align:left; font:700 14px var(--cond); padding:6px 8px; white-space:nowrap; }
+.fx th.hr small{ display:block; font:500 11.5px var(--font); color:var(--ink-3); }
+.fx td.cell{ position:relative; cursor:pointer; font:500 16px var(--mono); height:46px; min-width:64px; padding:0 4px; }
+.fx td.cell:hover{ box-shadow:inset 0 0 0 2px var(--accent); }
+.fx td.cell i{ position:absolute; right:4px; bottom:2px; font:600 10.5px var(--font); font-style:normal; color:var(--ink-3); }
+.fx td.cell.hi{ background:var(--hi); } .fx td.cell.mid{ background:var(--mid); } .fx td.cell.lo{ background:var(--lo); }
+.fx td.cell.ed::after{ content:""; position:absolute; top:0; right:0; border-style:solid; border-width:0 9px 9px 0; border-color:transparent var(--edit) transparent transparent; }
+.fx td.cell .wx{ font:600 13px var(--font); }
+.fx td.cell .none{ color:var(--ink-3); font:500 13px var(--font); }
+.fx td.tot{ font:600 14px var(--font); color:var(--ink-2); width:70px; }
+.fx tr.obs th,.fx tr.obs td{ background:var(--panel-2); font-size:12.5px; height:28px; }
+.fx tr.obs td span{ font-family:var(--mono); color:var(--ink-2); margin-right:5px; }
+.fx tr.obs td b{ font-weight:700; } .fx tr.obs b.pos{ color:var(--ok); } .fx tr.obs b.neg{ color:var(--warn); }
+.legend{ display:flex; gap:14px; font-size:12.5px; color:var(--ink-2); margin-top:8px; flex-wrap:wrap; }
+.legend i{ display:inline-block; width:14px; height:10px; border-radius:2px; vertical-align:-1px; margin-right:5px; }
+.pop{ position:absolute; z-index:40; width:290px; background:var(--panel); border:1px solid var(--rule); border-radius:12px; box-shadow:0 16px 40px rgba(0,0,0,.22); padding:10px 12px 12px; }
+.pophead{ display:flex; align-items:center; gap:8px; font-size:14px; margin-bottom:8px; }
+.pophead .x{ margin-left:auto; border:0; background:transparent; font-size:20px; line-height:1; cursor:pointer; color:var(--ink-3); }
+.alts{ display:grid; gap:4px; }
+.alts button{ display:flex; justify-content:space-between; border:1px solid var(--rule); background:var(--panel-2); border-radius:7px; padding:5px 9px; cursor:pointer; font-family:var(--mono); }
+.alts button i{ font:600 12.5px var(--font); font-style:normal; color:var(--ink-2); }
+.alts button.on{ border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
+.probs{ display:flex; flex-wrap:wrap; gap:4px 12px; font-size:12.5px; color:var(--ink-2); margin:8px 0 2px; }
+.own{ display:flex; gap:8px; align-items:center; margin-top:10px; font-size:13px; }
+.own input,.own select{ flex:1; border:1px solid var(--rule); border-radius:7px; padding:5px 8px; background:var(--panel); font-family:var(--mono); }
+.popfoot{ font-size:12px; color:var(--ink-3); margin-top:8px; }
+.seg{ display:inline-flex; border:1px solid var(--rule); border-radius:8px; overflow:hidden; flex-wrap:wrap; }
+.seg button{ border:0; background:var(--panel); padding:5px 11px; cursor:pointer; font-size:13px; border-right:1px solid var(--rule-2); }
+.seg button[aria-pressed="true"]{ background:var(--accent); color:var(--accent-ink); }
+.ghead{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+.scroll{ overflow-x:auto; }
+table.gd{ border-collapse:collapse; width:100%; font-size:13px; }
+.gd th,.gd td{ border-bottom:1px solid var(--rule-2); padding:4px 8px; text-align:center; white-space:nowrap; }
+.gd th{ font:600 12.5px var(--cond); color:var(--ink-2); }
+.gd td:first-child,.gd th:first-child{ text-align:left; }
+.gd td{ font-family:var(--mono); font-size:12.5px; }
+.gd td:first-child,.gd td:last-child{ font-family:var(--font); }
+.gd tr.off td{ font-weight:700; background:var(--panel-2); }
+.gd tr.off2 td{ color:var(--ink-3); }
+.gd td.match{ color:var(--ok); font-weight:600; }
+svg#meteo{ width:100%; height:300px; display:block; }
+#meteo .win{ fill:rgba(45,93,140,.09); } #meteo .now{ stroke:var(--gold); stroke-dasharray:3 3; }
+#meteo .g{ stroke:var(--rule-2); } #meteo .ax{ font:500 10.5px var(--font); fill:var(--ink-3); } #meteo .pl{ font:600 11.5px var(--cond); fill:var(--ink-2); }
+#meteo .band{ opacity:.18; stroke:none; } #meteo .med{ fill:none; stroke-width:1.8; }
+#meteo .tt{ fill:#C0462F; stroke:#C0462F; } #meteo .td{ fill:#2F7A4A; stroke:#2F7A4A; } #meteo .ww{ fill:#2D5D8C; stroke:#2D5D8C; } #meteo .cc{ stroke:#7A4FA0; fill:#7A4FA0; } #meteo .vv{ stroke:#B5862B; fill:#B5862B; }
+#meteo .med.q{ stroke-dasharray:3 3; opacity:.7; } #meteo .ob{ stroke:var(--panel); stroke-width:.8; }
+.mleg{ display:flex; gap:12px; flex-wrap:wrap; font-size:12px; color:var(--ink-2); }
+.mleg i{ display:inline-block; width:12px; height:3px; vertical-align:middle; margin-right:5px; }
+ul.obs{ list-style:none; margin:0; padding:0; max-height:330px; overflow:auto; font-size:12.5px; }
+ul.obs li{ display:grid; grid-template-columns:70px 1fr; gap:6px; padding:4px 0; border-bottom:1px solid var(--rule-2); }
+ul.obs li.speci .tm{ color:var(--edit); font-weight:600; }
+ul.obs code,#tafBox code{ font:12px/1.45 var(--mono); white-space:pre-wrap; word-break:break-word; }
+ul.obs .tm{ font:600 12px var(--mono); color:var(--ink-3); }
+#tafBox{ background:var(--panel-2); border-radius:8px; padding:8px 10px; }
+table.sk{ width:100%; border-collapse:collapse; font-size:12.5px; }
+.sk th,.sk td{ padding:3px 4px; border-bottom:1px solid var(--rule-2); text-align:right; }
+.sk th:first-child,.sk td:first-child{ text-align:left; }
+.sk small{ color:var(--ink-3); margin-left:3px; font-size:10.5px; }
+.subgrid{ display:grid; grid-template-columns:auto 1fr; gap:14px 22px; align-items:start; }
+#mc{ display:flex; gap:8px; flex-wrap:wrap; }
+#mc label{ display:flex; gap:5px; align-items:center; font-size:13.5px; font-weight:600; }
+#mc select{ border:1px solid var(--rule); border-radius:6px; padding:3px 6px; background:var(--panel); }
+textarea{ width:100%; border:1px solid var(--rule); border-radius:8px; padding:9px 11px; background:var(--panel-2); font:14px/1.5 var(--font); resize:vertical; }
+.chk{ font-size:13.5px; padding:7px 10px; border-radius:7px; } .chk.ok{ background:var(--ok-bg); color:var(--ok); } .chk.warn{ background:var(--edit-bg); color:var(--edit); }
+.actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+#fname{ font:500 13px var(--mono); color:var(--ink-2); }
+.fileb{ position:relative; overflow:hidden; display:inline-block; }
+.fileb input{ position:absolute; inset:0; opacity:0; cursor:pointer; }
+.gr{ border-top:1px solid var(--rule-2); padding:10px 0; }
+.gr h3{ display:flex; gap:10px; align-items:center; text-transform:none; font-size:16px; color:var(--ink); }
+.gr h3 span{ font:500 12.5px var(--font); color:var(--ink-3); }
+.gr h3 .btn{ margin-left:auto; }
+table.gt{ border-collapse:collapse; font-size:13px; width:100%; }
+.gt th,.gt td{ padding:3px 8px; border-bottom:1px solid var(--rule-2); text-align:right; }
+.gt th:first-child,.gt td:first-child{ text-align:left; }
+.gt tr.me td{ background:var(--panel-2); font-weight:700; }
+.gt tr.beat td{ font-weight:700; color:var(--ok); }
+details > summary{ cursor:pointer; list-style:none; display:flex; gap:10px; align-items:baseline; }
+details > summary::-webkit-details-marker{ display:none; }
+details > summary h2::before{ content:"\25B8  "; color:var(--ink-3); }
+details[open] > summary h2::before{ content:"\25BE  "; }
+.srcgrid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:14px 24px; margin-top:12px; }
+.srow{ display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:center; font-size:13.5px; padding:2px 0; }
+.srow.na{ color:var(--ink-3); } .srow small{ color:var(--ink-3); }
+.srow select{ border:1px solid var(--rule); border-radius:5px; font-size:12px; background:var(--panel); }
+.opts{ display:flex; gap:10px 22px; flex-wrap:wrap; font-size:13.5px; margin-top:14px; align-items:center; }
+.opts label{ display:inline-flex; gap:7px; align-items:center; }
+.opts input[type=number],.opts input[type=text]{ width:64px; border:1px solid var(--rule); border-radius:6px; padding:3px 6px; background:var(--panel); }
+.note{ font-size:12.5px; color:var(--ink-3); margin-top:10px; max-width:110ch; }
+.toast{ position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(20px); background:var(--ink); color:var(--panel); padding:10px 18px; border-radius:10px; opacity:0; transition:all .2s; pointer-events:none; z-index:60; }
+.toast.show{ opacity:1; transform:translateX(-50%); }
+@media (max-width:1100px){ main{ grid-template-columns:1fr; } }
+@media (max-width:700px){ .top,.statusline,main{ padding-left:14px; padding-right:14px; } .top{ grid-template-columns:1fr; } .top .ctl{ justify-content:flex-start; } .subgrid{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>Thor's Forecast Challenge <span>2026</span></h1>
+    <div class="sub">Operation Northern Lantern forecast workbench: guidance, observations, scoring-optimized values and the daily workbook</div>
+  </div>
+  <div class="ctl">
+    <select id="daySel" aria-label="Challenge day"></select>
+    <input id="team" placeholder="TEAM NAME" maxlength="24" aria-label="Team name" autocomplete="off">
+    <button class="btn" id="refresh">Refresh data</button>
+  </div>
+  <div class="custom" id="customRow" hidden>
+    <label>ICAO(s) <input id="custIcao" placeholder="ETAR or ETAR,KBGR"></label>
+    <label>Valid start (UTC) <input id="custStart" placeholder="2026-10-28T06Z"></label>
+    <button class="btn" id="custGo">Load</button>
+  </div>
+</header>
+<div class="statusline"><span class="live" id="live">Loading</span><span id="suspense"></span><span class="sp"></span><span class="mut">Values are chosen to maximize expected points under the TFC26 scoring chart; click any cell to see alternatives.</span></div>
+<div class="banner" id="banner"></div>
+<main>
+  <div class="col">
+    <nav class="tabs" id="tabs" aria-label="Forecast locations"></nav>
+    <section class="panel">
+      <div id="blockHead"></div>
+      <div class="scroll" id="block"></div>
+      <div class="legend"><span><i style="background:var(--hi)"></i>Likely full or near-full points</span><span><i style="background:var(--mid)"></i>Partial</span><span><i style="background:var(--lo)"></i>Low confidence</span><span>Small number: expected points</span><span><i style="background:var(--edit)"></i>Edited by you</span></div>
+    </section>
+    <section class="panel">
+      <div class="ghead"><h2>Observations against guidance</h2><div class="mleg"><span><i style="background:#C0462F"></i>Temp</span><span><i style="background:#2F7A4A"></i>Dew point</span><span><i style="background:#2D5D8C"></i>Wind max</span><span><i style="background:#7A4FA0"></i>Ceiling (dashed: 25th pct)</span><span><i style="background:#B5862B"></i>Visibility</span><span>Dots: observed. Shaded: valid window</span></div></div>
+      <svg id="meteo" role="img" aria-label="Meteogram"></svg>
+    </section>
+    <section class="panel">
+      <div class="ghead"><h2>Guidance by source</h2><div class="seg" id="elSel"></div></div>
+      <div class="scroll" id="guide"></div>
+      <p class="note">Each row is that source's own best forecast under the scoring chart. Green values match yours. Weights include the recent-skill factor.</p>
+    </section>
+    <section class="panel" id="outlookCard" hidden>
+      <div class="ghead"><h2>Three-Day ETAR Outlook draft <span>T+3 to T+5</span></h2><div class="actions"><button class="btn sm" id="outlookRegen">Regenerate</button><button class="btn sm" id="outlookDl">Download .txt</button></div></div>
+      <textarea id="outlookTxt" rows="12"></textarea>
+      <p class="note" id="outlookNote"></p>
+    </section>
+    <section class="panel">
+      <h2>Submission</h2>
+      <div class="subgrid" style="margin-top:10px">
+        <strong>Date</strong><input type="date" id="subDate" style="width:170px;border:1px solid var(--rule);border-radius:7px;padding:4px 8px;background:var(--panel)">
+        <strong>Multiple choice</strong><div id="mc"></div>
+        <strong>Short answer / RFI / brief</strong><div><textarea id="sa" rows="7" placeholder="Goes into the Short Answer / RFI / CC Brief box of the workbook"></textarea><div class="mut" id="saCount"></div></div>
+        <strong>File</strong><div><span id="fname"></span></div>
+        <span></span><div class="chk" id="subCheck"></div>
+      </div>
+      <div class="actions" style="margin-top:12px">
+        <button class="btn primary" id="dl">Download workbook</button>
+        <button class="btn" id="saveSub">Save submission for grading</button>
+        <button class="btn" id="copyTxt">Copy forecast as text</button>
+      </div>
+      <p class="note">The workbook is the official TFC26 template with only the entry cells filled in. Email it to AF.A39T.workflow@us.af.mil before the suspense.</p>
+    </section>
+    <section class="panel">
+      <div class="ghead"><h2>Grading</h2><div class="actions"><span class="btn sm fileb">Import workbook<input type="file" id="importWb" accept=".xlsx"></span><button class="btn sm" id="exportSubs">Export saved</button><span class="btn sm fileb">Import saved<input type="file" id="importSubs" accept=".json"></span></div></div>
+      <div id="grades"></div>
+    </section>
+    <details class="panel">
+      <summary><h2>Sources, weighting and scoring assumptions</h2></summary>
+      <div class="srcgrid" id="srcGrid"></div>
+      <div class="opts">
+        <label><input type="checkbox" id="optSkill"> Weight sources by recent skill at the station</label>
+        <label><input type="checkbox" id="optBias"> Remove recent bias (temperature, dew point, wind)</label>
+        <label>Persistence weight <input type="number" id="wPersist" min="0" max="10" step="0.5"></label>
+        <label>TAF weight <input type="number" id="wTaf" min="0" max="10" step="0.5"></label>
+      </div>
+      <h3 style="margin-top:16px">Scoring assumptions (confirm with A39T)</h3>
+      <div class="opts" style="margin-top:4px">
+        <label>Points for blank Present Wx when nothing is observed <input type="number" id="rNone" min="0" max="6" step="1"></label>
+        <label><input type="checkbox" id="rFz"> −2 when freezing precip is observed but not forecast</label>
+        <label>No-ceiling code <input type="text" id="rCeil" maxlength="4"></label>
+        <label><input type="checkbox" id="rAny"> Temp/dew point accurate if it matches any ob in the hour</label>
+      </div>
+      <p class="note">Hourly verification: all METAR/SPECI reports within each hour. Wind speed is the highest speed or gust reported, direction is from that report (VRB scores 0), visibility and ceiling are the lowest, present weather is any category reported (vicinity ignored), temperature and dew point come from the routine METAR. The scoring chart doesn't say how a blank Present Wx or "no ceiling" is graded, so those are settings here; the optimizer adapts to whatever you set.</p>
+    </details>
+  </div>
+  <aside class="col">
+    <section class="panel"><h3>Latest observations</h3><ul class="obs" id="obsList"></ul></section>
+    <section class="panel"><h3>Current TAF</h3><div id="tafBox"></div></section>
+    <section class="panel"><h3>Model verification, last 24 h</h3><div id="skill"></div></section>
+  </aside>
+</main>
+<div class="toast" id="toast"></div>
+<script src="tfc-core.js"></script>
+<script src="tfc-template.js"></script>
+<script src="tfc-data.js"></script>
+<script>
+/* ============================================================
+   App
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const LS = { prefs:"tfc:v1:prefs", edits:"tfc:v1:edits", subs:"tfc:v1:subs", text:"tfc:v1:text" };
+const store = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e){ return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch (e){ /* storage unavailable */ } },
+};
+const prefs = Object.assign({ day:null, team:"", enabled:{}, weight:{}, skill:true, bias:true, wPersist:3, wTaf:2, rules:{ ...DEFAULT_RULES }, el:"t", custom:{ icao:"", start:"" } }, store.get(LS.prefs, {}));
+prefs.rules = Object.assign({ ...DEFAULT_RULES }, prefs.rules || {});
+let edits = store.get(LS.edits, {});
+let subs = store.get(LS.subs, {});
+let texts = store.get(LS.text, {});
+const savePrefs = () => store.set(LS.prefs, prefs), saveEdits = () => store.set(LS.edits, edits), saveSubs = () => store.set(LS.subs, subs), saveTexts = () => store.set(LS.text, texts);
+
+const S = { blocks:[], stations:{}, obs:{}, taf:{}, srcs:{}, skill:{}, recs:{}, status:{}, loading:false, cur:0, TL:null, popover:null };
+const FAM = { global:"Global models", regional:"Regional and high-resolution", ens:"Ensembles", mos:"MOS and LAMP", obs:"Observations and TAF" };
+const ALL_SRC = [...OM_DET, ...OM_ENS, ...MOS_MODELS.map(m => ({ ...m, fam:"mos" })), { id:"taf", name:"Official TAF", fam:"obs" }, { id:"persist", name:"Persistence (latest ob)", fam:"obs" }];
+
+/* ---------- day / block helpers ---------- */
+function currentDay(){
+  if (prefs.day === "custom"){
+    const c = prefs.custom || {}; const icaos = String(c.icao || "").toUpperCase().split(/[\s,]+/).filter(x => /^[A-Z0-9]{4}$/.test(x)).slice(0, 3);
+    const st = parseStart(c.start);
+    return { n:"C", title:"Custom forecast", suspense:null, blocks: icaos.map(i => [i, isFinite(st) ? new Date(st).toISOString().slice(0, 13) + "Z" : new Date(Math.ceil(Date.now()/H)*H + 6*H).toISOString().slice(0, 13) + "Z"]) };
+  }
+  const d = DAYS.find(x => String(x.n) === String(prefs.day)) || defaultDay();
+  return d;
+}
+/* "2026-10-28T06Z", "2026-10-28 0600Z", "2026-10-28T06:00", or "280600Z" (this month) */
+function parseStart(v){
+  v = String(v || "").trim().toUpperCase(); let m;
+  if ((m = v.match(/^(\d{4})-(\d{2})-(\d{2})[T ]?(\d{2}):?(\d{2})?Z?$/))) return Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +(m[5] || 0));
+  if ((m = v.match(/^(\d{2})(\d{2})(\d{2})?Z?$/))) return anchorDay(+m[1], +m[2], +(m[3] || 0), Date.now());
+  return NaN;
+}
+function defaultDay(){ const now = Date.now(); return DAYS.find(d => isoZ(d.suspense) > now - 6*H) || DAYS[DAYS.length - 1]; }
+const blockKey = b => `${b.icao}|${b.start}`;
+const hourLabel = (b, h) => `${p2(new Date(b.start + h*H).getUTCHours())}–${p2(new Date(b.start + (h + 1)*H).getUTCHours())}Z`;
+
+/* ---------- loading ---------- */
+async function loadDay(){
+  const day = currentDay();
+  S.blocks = day.blocks.map(([icao, st]) => ({ icao, start: isoZ(st) }));
+  const icaos = [...new Set([...S.blocks.map(b => b.icao), ...(day.outlook ? [day.outlook.icao] : [])])];
+  const endMs = Math.max(...S.blocks.map(b => b.start + 7*H), day.outlook ? Date.parse(day.outlook.from + "T00:00:00Z") + day.outlook.days*86400e3 : 0, Date.now() + 12*H);
+  S.TL = makeTimeline(Math.min(Date.now() - 50*H, ...S.blocks.map(b => b.start - 30*H)), endMs + 6*H);
+  S.loading = true; S.srcs = {}; S.recs = {}; S.status = {}; S.cur = Math.min(S.cur, S.blocks.length - 1);
+  renderAll();
+  const metas = {};
+  await Promise.all(icaos.map(async ic => { try { metas[ic] = await stationMeta(ic); } catch (e){ S.status["meta:" + ic] = "unknown station"; } }));
+  S.stations = metas;
+  const stList = icaos.filter(ic => metas[ic]).map(ic => metas[ic]);
+  icaos.forEach(ic => S.srcs[ic] = []);
+  const jobs = [];
+  icaos.forEach(ic => {
+    jobs.push(fetchObs(ic).then(r => { S.obs[ic] = r.obs; S.status["obs:" + ic] = `${r.obs.length} obs (${r.from})`; }).catch(e => { S.obs[ic] = S.obs[ic] || []; S.status["obs:" + ic] = "no observations"; }).finally(schedule));
+    jobs.push(fetchTAF(ic).then(r => { S.taf[ic] = r.taf; }).catch(() => { S.taf[ic] = null; }).finally(schedule));
+    if (isUS(ic)) MOS_MODELS.forEach(def => jobs.push(fetchMOS(ic, def, S.TL).then(r => { if (r) S.srcs[ic].push({ def:{ ...def, fam:"mos" }, members:r.members, run:r.run }); }).catch(() => {}).finally(schedule)));
+  });
+  if (stList.length){
+    const om = (def, ens) => (DEMO ? demoOM(def, ens, stList, S.TL) : fetchOM(def, ens, stList, S.TL)).then(per => {
+      stList.forEach((st, si) => { const ms = per[si] || []; if (ms.length) S.srcs[st.icao].push({ def, members:ms }); });
+      S.status[def.id] = per.some(x => x && x.length) ? "ok" : "no data here";
+    }).catch(e => { S.status[def.id] = "not available"; }).finally(schedule);
+    OM_DET.forEach(d => jobs.push(om(d, false))); OM_ENS.forEach(d => jobs.push(om(d, true)));
+  }
+  await Promise.allSettled(jobs);
+  S.loading = false; schedule();
+}
+let schedT = null;
+function schedule(){ if (schedT) return; schedT = setTimeout(() => { schedT = null; computeAll(); renderAll(); }, 250); }
+
+/* ---------- skill and bias against recent observations ---------- */
+function srcValueAt(src, t){
+  const ss = src.members.map(m => sampleFromMember(m, S.TL, t, null)).filter(Boolean);
+  if (!ss.length) return null;
+  const mean = k => { const v = ss.map(s => s[k]).filter(x => x != null && isFinite(x)); return v.length ? v.reduce((a, b) => a + b, 0)/v.length : null; };
+  let u = 0, v = 0, n = 0; ss.forEach(s => { if (s.dir != null && s.spd != null){ u += Math.sin(s.dir*Math.PI/180); v += Math.cos(s.dir*Math.PI/180); n++; } });
+  return { t:mean("t"), td:mean("td"), spd:mean("spd"), dir: n ? (Math.atan2(u, v)*180/Math.PI + 360) % 360 : null };
+}
+function computeSkill(icao){
+  const obs = S.obs[icao] || [], out = {};
+  const now = Date.now(), from = Math.floor((now - 26*H)/H)*H;
+  const hours = []; for (let t = from; t < now - H; t += H){ const o = hourObs(obs, t); if (o) hours.push([t, o]); }
+  for (const src of S.srcs[icao] || []){
+    const e = { t:[], td:[], spd:[], dir:[] };
+    for (const [t, o] of hours){
+      const v = srcValueAt(src, t); if (!v) continue;
+      if (v.t != null && o.t != null) e.t.push(v.t - o.t);
+      if (v.td != null && o.td != null) e.td.push(v.td - o.td);
+      if (v.spd != null && o.spd != null) e.spd.push(v.spd - o.spd);
+      if (v.dir != null && typeof o.dir === "number" && o.spd >= 6) e.dir.push(angDiff(v.dir, o.dir));
+    }
+    const st = {};
+    for (const k in e){ const a = e[k]; if (a.length >= 6){ st[k] = { n:a.length, bias: k === "dir" ? null : a.reduce((x, y) => x + y, 0)/a.length, mae: a.reduce((x, y) => x + Math.abs(y), 0)/a.length }; } }
+    out[src.def.id] = st;
+  }
+  /* skill factor per element: relative to the median error of sources with stats */
+  const fac = {};
+  for (const k of ["t","td","spd","dir"]){
+    const maes = Object.values(out).map(s => s[k] && s[k].mae).filter(x => x != null).sort((a, b) => a - b);
+    const med = maes.length ? maes[maes.length >> 1] : null;
+    for (const id in out){ const m = out[id][k] && out[id][k].mae; (fac[id] = fac[id] || {})[k] = med && m != null ? clamp(Math.pow((med + 0.3)/(m + 0.3), 1.5), 0.3, 3) : 1; }
+  }
+  S.skill[icao] = { stats:out, fac, nHours: hours.length };
+}
+
+/* ---------- samples and recommendations for one hour ---------- */
+const W = id => prefs.enabled[id] === false ? 0 : (prefs.weight[id] ?? 1);
+function samplesFor(icao, t, onlyId){
+  const out = [];
+  const sk = S.skill[icao] || { fac:{}, stats:{} };
+  for (const src of S.srcs[icao] || []){
+    const id = src.def.id; if (onlyId && id !== onlyId) continue;
+    const w0 = onlyId ? 1 : W(id); if (!w0) continue;
+    const st = sk.stats[id] || {};
+    const bias = prefs.bias ? { t: st.t ? st.t.bias*0.7 : 0, td: st.td ? st.td.bias*0.7 : 0, spd: st.spd ? st.spd.bias*0.6 : 0 } : null;
+    const f = prefs.skill && !onlyId ? (sk.fac[id] || {}) : {};
+    const n = src.members.length;
+    for (const m of src.members){
+      const s = sampleFromMember(m, S.TL, t, { bias }); if (!s) continue;
+      const w = w0/n;
+      const wk = { t: w*(f.t ?? 1), td: w*(f.td ?? 1), spd: w*(f.spd ?? 1), dir: w*(f.dir ?? 1) };
+      if (s.mos){
+        const T = s.t, typ = s.mos.typ, cat = typ === "Z" ? WX.FZ : typ === "S" ? WX.FROZ : typ === "R" ? WX.LIQ : (T != null && T <= 0 ? WX.FROZ : WX.LIQ);
+        const pp = clamp(s.mos.pop, 0, 1);
+        out.push({ ...s, cats:new Set([cat]), w: w*pp, wk:{ ...wk, wx: w*pp } });
+        out.push({ ...s, cats:new Set(), w: w*(1 - pp), wk:{ ...wk, wx: w*(1 - pp) } });
+        continue;
+      }
+      out.push({ ...s, w, wk });
+    }
+  }
+  const taf = S.taf[icao];
+  if ((!onlyId || onlyId === "taf") && taf && (onlyId || W("taf"))){
+    const th = tafHour(taf, t);
+    if (th) th.forEach(x => out.push({ ...x, t:null, td:null, w: (onlyId ? 1 : W("taf")*prefs.wTaf/2)*x.w }));
+  }
+  if ((!onlyId || onlyId === "persist") && (onlyId || W("persist"))){
+    const obs = S.obs[icao] || []; const last = obs[obs.length - 1];
+    if (last){
+      const lead = (t + H/2 - last.time)/H;
+      const w = (onlyId ? 1 : W("persist")*prefs.wPersist)*Math.exp(-Math.max(0, lead)/2.5);
+      if (w > 0.01) out.push({ t:last.t, td:last.td, spd: last.spd == null ? null : Math.max(last.spd, last.gst || 0), dir: last.vrb ? null : last.dir, vis:last.vis, ceil:last.ceil, cats:last.cats, w });
+    }
+  }
+  return out;
+}
+function computeAll(){
+  for (const ic in S.srcs) computeSkill(ic);
+  for (const b of S.blocks){
+    const key = blockKey(b), rows = [];
+    for (let h = 0; h < 6; h++){
+      const t = b.start + h*H, sm = samplesFor(b.icao, t);
+      rows.push(sm.length ? optimizeHour(sm, prefs.rules) : {});
+    }
+    S.recs[key] = rows;
+  }
+}
+/* each source's own best forecast for a block (used in the guidance table and for grading comparisons) */
+function sourceForecast(b, id){
+  const rows = [];
+  for (let h = 0; h < 6; h++){ const sm = samplesFor(b.icao, b.start + h*H, id); const r = sm.length ? optimizeHour(sm, prefs.rules) : {}; rows.push(Object.fromEntries(ELEMENTS.map(e => [e.k, r[e.k] ? r[e.k].fmt : ""]))); }
+  return rows;
+}
+
+/* ---------- official values (recommendation unless edited) ---------- */
+function official(b){
+  const key = blockKey(b), rec = S.recs[key] || [], ed = edits[key] || {};
+  return Array.from({ length:6 }, (_, h) => Object.fromEntries(ELEMENTS.map(e => { const x = (ed[h] || {})[e.k]; return [e.k, x !== undefined ? x : rec[h] && rec[h][e.k] ? rec[h][e.k].fmt : ""]; })));
+}
+function validate(k, v){
+  v = String(v ?? "").trim().toUpperCase();
+  if (k === "wx") return WX_LIST.includes(v) ? v : WX_LIST.find(x => x.toUpperCase() === v) ?? null;
+  if (v === "") return "";
+  if (k === "dir"){ if (v === "VRB") return null; const n = parseInt(v, 10); if (!isFinite(n) || n < 0 || n > 360) return null; return p3(Math.round(n/10)*10); }
+  if (k === "spd"){ const n = parseInt(v, 10); return isFinite(n) && n >= 0 && n < 200 ? p2(n) : null; }
+  if (k === "vis"){ const n = parseInt(v, 10); if (!isFinite(n) || n < 0) return null; return String(n >= 9999 ? 9999 : n).padStart(4, "0"); }
+  if (k === "ceil"){ if (v === "NONE" || v === prefs.rules.noCeilCode) return prefs.rules.noCeilCode; const n = parseInt(v, 10); return isFinite(n) && n >= 0 && n < 999 ? p3(n) : null; }
+  if (k === "t" || k === "td"){ const n = parseTemp(v); return n == null ? null : fmtTemp(n); }
+  return v;
+}
+
+/* ============================================================
+   Rendering
+   ============================================================ */
+function renderAll(){ renderHeader(); renderTabs(); renderBlock(); renderSide(); renderGuidance(); renderMeteo(); renderSubmission(); renderOutlook(); renderGrades(); renderSources(); }
+function renderHeader(){
+  const day = currentDay();
+  $("daySel").innerHTML = DAYS.map(d => `<option value="${d.n}" ${String(d.n) === String(prefs.day ?? day.n) ? "selected" : ""}>Day ${d.n}: ${d.title} (${d.blocks.map(b => b[0]).join(", ")})</option>`).join("") + `<option value="custom" ${prefs.day === "custom" ? "selected" : ""}>Custom: any ICAO and time</option>`;
+  $("customRow").hidden = prefs.day !== "custom";
+  $("team").value = prefs.team || "";
+  const sus = day.suspense ? isoZ(day.suspense) : null;
+  if (sus){ const ms = sus - Date.now(); $("suspense").innerHTML = ms > 0 ? `Suspense <b>${new Date(sus).toISOString().slice(5, 16).replace("T", " ")}Z</b>, ${Math.floor(ms/H)} h ${Math.floor(ms % H/60000)} min left` : `Suspense passed (${new Date(sus).toISOString().slice(5, 16).replace("T", " ")}Z)`; $("suspense").classList.toggle("late", ms <= 0); }
+  else $("suspense").textContent = "";
+  const n = Object.values(S.status).filter(x => x === "ok").length;
+  $("live").textContent = DEMO ? "Demo data (synthetic)" : S.loading ? `Loading guidance, ${n} models in` : `${n} models loaded`;
+  $("banner").className = DEMO ? "banner show demo" : "banner"; $("banner").textContent = DEMO ? "Demo mode: every value is synthetic. Remove ?demo=1 from the address for real data." : "";
+}
+function renderTabs(){
+  $("tabs").innerHTML = S.blocks.map((b, i) => { const st = S.stations[b.icao]; return `<button type="button" data-i="${i}" aria-pressed="${i === S.cur}"><span class="n">${b.icao}</span><span class="p">${st ? st.name : "&nbsp;"}<br>${new Date(b.start).toISOString().slice(5, 10)} ${p2(new Date(b.start).getUTCHours())}–${p2(new Date(b.start + 6*H).getUTCHours())}Z</span></button>`; }).join("");
+}
+const evClass = (ev, max) => ev == null ? "" : ev >= max*0.66 ? "hi" : ev >= max*0.33 ? "mid" : "lo";
+function renderBlock(){
+  const b = S.blocks[S.cur]; if (!b){ $("block").innerHTML = ""; return; }
+  const key = blockKey(b), rec = S.recs[key] || [], off = official(b), ed = edits[key] || {};
+  const obs = S.obs[b.icao] || [];
+  let total = 0, maxT = 0;
+  let h = `<table class="fx"><thead><tr><th>Valid</th>${ELEMENTS.map(e => `<th>${e.label}<small>${e.sub}</small></th>`).join("")}<th>Expected</th></tr></thead><tbody>`;
+  for (let i = 0; i < 6; i++){
+    const r = rec[i] || {}, ob = hourObs(obs, b.start + i*H);
+    let rowEV = 0;
+    h += `<tr><th class="hr">Hr ${p2(i)}-${p2(i + 1)}<small>${hourLabel(b, i)}</small></th>`;
+    for (const e of ELEMENTS){
+      const v = off[i][e.k], R = r[e.k], isEd = (ed[i] || {})[e.k] !== undefined;
+      const ev = R && R.evf ? R.evf(v) : null; if (ev != null){ rowEV += ev; } maxT += e.max;
+      h += `<td class="cell ${evClass(ev, e.max)} ${isEd ? "ed" : ""}" data-h="${i}" data-k="${e.k}" title="${R ? "Expected points " + (ev ?? 0).toFixed(2) + " of " + e.max : "No guidance"}">${e.k === "wx" ? (v ? `<span class="wx">${v}</span>` : `<span class="none">none</span>`) : (v || "<span class='none'>–</span>")}${ev != null ? `<i>${ev.toFixed(1)}</i>` : ""}</td>`;
+    }
+    total += rowEV;
+    h += `<td class="tot">${rowEV.toFixed(1)}</td></tr>`;
+    if (ob){
+      const g = gradeHour(off[i], ob, prefs.rules);
+      const obsTxt = { dir: ob.dir === "VRB" ? "VRB" : ob.dir == null ? "" : p3(ob.dir), spd: ob.spd == null ? "" : p2(ob.spd), vis: ob.vis == null ? "" : String(ob.vis).padStart(4, "0"), wx: ob.wx || "none", ceil: ob.ceil === undefined ? "" : ob.ceil === null ? "none" : p3(Math.round(ob.ceil/100)), t: fmtTemp(ob.t), td: fmtTemp(ob.td) };
+      const pts = ELEMENTS.reduce((a, e) => a + (g[e.k] ?? 0), 0);
+      h += `<tr class="obs"><th class="hr">Observed<small>${ob.n} ob${ob.n > 1 ? "s" : ""}</small></th>${ELEMENTS.map(e => `<td><span>${obsTxt[e.k]}</span><b class="${(g[e.k] ?? 0) > 0 ? "pos" : (g[e.k] ?? 0) < 0 ? "neg" : ""}">${g[e.k] == null ? "" : (g[e.k] > 0 ? "+" : "") + g[e.k]}</b></td>`).join("")}<td class="tot">${pts}</td></tr>`;
+    }
+  }
+  h += `</tbody></table>`;
+  $("block").innerHTML = h;
+  $("blockHead").innerHTML = `<h2>${b.icao} ${S.stations[b.icao] ? `<span>${S.stations[b.icao].name}</span>` : ""}</h2><div class="kv"><span>Valid <b>${new Date(b.start).toISOString().slice(0, 13).replace("T", " ")}Z to ${p2(new Date(b.start + 6*H).getUTCHours())}Z</b></span><span>Expected score <b>${total.toFixed(1)}</b> of ${maxT}</span><span>${Object.keys(ed).length ? `<button class="btn sm" id="resetBlock">Reset to recommendation</button>` : "All values from the optimizer"}</span></div>`;
+  const rb = $("resetBlock"); if (rb) rb.onclick = () => { delete edits[key]; saveEdits(); renderBlock(); renderSubmission(); };
+}
+function openPop(td){
+  closePop();
+  const b = S.blocks[S.cur], key = blockKey(b), i = +td.dataset.h, k = td.dataset.k;
+  const R = (S.recs[key] || [])[i] && S.recs[key][i][k], e = ELEMENTS.find(x => x.k === k), cur = official(b)[i][k];
+  const fmtAlt = v => k === "dir" ? p3(v) : k === "spd" ? p2(v) : k === "vis" ? String(v).padStart(4, "0") : k === "ceil" ? (v === "NONE" ? `${prefs.rules.noCeilCode} (no ceiling)` : p3(v)) : k === "wx" ? (v || "none") : fmtTemp(v);
+  const altVal = v => k === "ceil" && v === "NONE" ? prefs.rules.noCeilCode : k === "wx" ? v : fmtAlt(v).split(" ")[0];
+  let h = `<div class="pophead"><b>${e.label}</b> ${hourLabel(b, i)}<button class="x" id="popX" aria-label="Close">×</button></div>`;
+  if (R){
+    h += `<div class="alts">${R.alts.map(a => `<button type="button" data-v="${altVal(a.v)}" class="${altVal(a.v) === cur ? "on" : ""}"><span>${fmtAlt(a.v)}</span><i>${a.ev.toFixed(2)}</i></button>`).join("")}</div>`;
+    if (k === "wx") h += `<div class="probs">${Object.entries(R.P).sort((a, b) => b[1] - a[1]).map(([c, p]) => `<span>${c || "none"} <b>${Math.round(p*100)}%</b></span>`).join("")}</div>`;
+    if (k === "ceil") h += `<div class="probs"><span>No ceiling <b>${Math.round(R.pNone*100)}%</b></span></div>`;
+    if (k === "dir") h += `<div class="probs"><span>Calm <b>${Math.round(R.pCalm*100)}%</b></span><span>Light/variable <b>${Math.round(R.pVrb*100)}%</b></span></div>`;
+  } else h += `<p class="mut">No guidance for this hour.</p>`;
+  h += k === "wx"
+    ? `<label class="own">Set<select id="popIn">${WX_LIST.map(x => `<option value="${x}" ${x === cur ? "selected" : ""}>${x || "none"}</option>`).join("")}</select></label>`
+    : `<label class="own">Set<input id="popIn" value="${cur}" autocomplete="off"></label>`;
+  h += `<div class="popfoot">Numbers are expected points under the TFC26 chart.${(edits[key] || {})[i] && edits[key][i][k] !== undefined ? ` <button class="btn sm" id="popReset">Use recommendation</button>` : ""}</div>`;
+  const pop = document.createElement("div"); pop.className = "pop"; pop.innerHTML = h; document.body.appendChild(pop);
+  const r = td.getBoundingClientRect(); pop.style.left = Math.min(window.innerWidth - 300, r.left + window.scrollX) + "px"; pop.style.top = (r.bottom + window.scrollY + 6) + "px";
+  S.popover = { pop, i, k, key };
+  const set = v => { const val = validate(k, v); if (val == null){ toast(`"${v}" isn't a valid ${e.label}`); return; } const rv = R ? R.fmt : null; edits[key] = edits[key] || {}; edits[key][i] = edits[key][i] || {}; if (val === rv) delete edits[key][i][k]; else edits[key][i][k] = val; if (!Object.keys(edits[key][i]).length) delete edits[key][i]; if (!Object.keys(edits[key]).length) delete edits[key]; saveEdits(); closePop(); renderBlock(); renderSubmission(); };
+  pop.querySelectorAll(".alts button").forEach(x => x.onclick = () => set(x.dataset.v));
+  const inp = $("popIn"); inp.focus(); if (inp.select) inp.select();
+  inp.addEventListener("keydown", ev => { if (ev.key === "Enter") set(inp.value); if (ev.key === "Escape") closePop(); });
+  if (inp.tagName === "SELECT") inp.onchange = () => set(inp.value);
+  $("popX").onclick = closePop;
+  const pr = $("popReset"); if (pr) pr.onclick = () => { delete edits[key][i][k]; if (!Object.keys(edits[key][i]).length) delete edits[key][i]; if (!Object.keys(edits[key]).length) delete edits[key]; saveEdits(); closePop(); renderBlock(); renderSubmission(); };
+}
+function closePop(){ if (S.popover){ S.popover.pop.remove(); S.popover = null; } }
+
+function renderSide(){
+  const b = S.blocks[S.cur]; if (!b){ $("obsList").innerHTML = ""; return; }
+  const obs = (S.obs[b.icao] || []).slice(-14).reverse();
+  $("obsList").innerHTML = obs.length ? obs.map(o => `<li class="${o.special ? "speci" : ""}"><span class="tm">${zstr(o.time)}</span><code>${o.raw.replace(/^(METAR|SPECI)\s+/, "")}</code></li>`).join("") : `<li class="mut">${S.loading ? "Loading" : "No recent observations found"}</li>`;
+  const taf = S.taf[b.icao];
+  $("tafBox").innerHTML = taf ? `<code>${taf.raw.replace(/\s(FM\d{6}|BECMG|TEMPO|PROB\d{2})/g, "\n  $1")}</code>` : `<span class="mut">${S.loading ? "Loading" : "No TAF found"}</span>`;
+  const sk = S.skill[b.icao];
+  const stats = sk ? Object.entries(sk.stats).filter(([, st]) => st.t || st.spd) : [];
+  stats.sort((a, b2) => ((a[1].t ? a[1].t.mae : 9) + (a[1].spd ? a[1].spd.mae/2 : 4)) - ((b2[1].t ? b2[1].t.mae : 9) + (b2[1].spd ? b2[1].spd.mae/2 : 4)));
+  const f = (x, bias) => x ? `${x.mae.toFixed(1)}${bias && x.bias != null ? `<small>${x.bias >= 0 ? "+" : ""}${x.bias.toFixed(1)}</small>` : ""}` : "–";
+  $("skill").innerHTML = stats.length ? `<table class="sk"><thead><tr><th>Source</th><th>Temp</th><th>Dew pt</th><th>Wind</th><th>Dir</th></tr></thead><tbody>${stats.slice(0, 14).map(([id, st]) => { const d = ALL_SRC.find(x => x.id === id); return `<tr><td>${d ? d.name : id}</td><td>${f(st.t, 1)}</td><td>${f(st.td, 1)}</td><td>${f(st.spd, 1)}</td><td>${st.dir ? Math.round(st.dir.mae) + "°" : "–"}</td></tr>`; }).join("")}</tbody></table><p class="mut">Mean absolute error over the last ${sk.nHours} observed hours, with bias (model minus observed) in small type. ${prefs.skill ? "Better-verifying models get more weight" : "Skill weighting is off"}${prefs.bias ? ", and recent bias is removed." : "."}</p>` : `<p class="mut">${S.loading ? "Waiting for models and observations" : "Not enough recent observations to verify the models."}</p>`;
+}
+
+/* guidance table: each source's own forecast for the selected element */
+function renderGuidance(){
+  const b = S.blocks[S.cur]; if (!b){ $("guide").innerHTML = ""; return; }
+  const k = prefs.el || "t";
+  $("elSel").innerHTML = ELEMENTS.map(e => `<button type="button" data-k="${e.k}" aria-pressed="${e.k === k}">${e.label}</button>`).join("");
+  const rows = [];
+  const ids = [...(S.srcs[b.icao] || []).map(s => s.def.id), ...(S.taf[b.icao] ? ["taf"] : []), ...((S.obs[b.icao] || []).length ? ["persist"] : [])];
+  for (const id of ids){ const fc = sourceForecast(b, id); if (fc.every(r => !r[k])) continue; rows.push([id, fc]); }
+  const off = official(b);
+  const famOrder = ["obs","mos","regional","global","ens"];
+  rows.sort((a, c) => famOrder.indexOf((ALL_SRC.find(x => x.id === a[0]) || {}).fam) - famOrder.indexOf((ALL_SRC.find(x => x.id === c[0]) || {}).fam));
+  let h = `<table class="gd"><thead><tr><th>Source</th>${[0,1,2,3,4,5].map(i => `<th>${hourLabel(b, i)}</th>`).join("")}<th>Weight</th></tr></thead><tbody>`;
+  h += `<tr class="off"><td>Your forecast</td>${off.map(r => `<td>${r[k] || "–"}</td>`).join("")}<td></td></tr>`;
+  for (const [id, fc] of rows){
+    const d = ALL_SRC.find(x => x.id === id), fac = (S.skill[b.icao] || { fac:{} }).fac[id];
+    const fk = fac && (k === "t" || k === "td" || k === "spd" || k === "dir") ? fac[k] : null;
+    h += `<tr class="${W(id) ? "" : "off2"}"><td>${d ? d.name : id}</td>${fc.map((r, i) => `<td class="${r[k] && r[k] === off[i][k] ? "match" : ""}">${r[k] === "" && k === "wx" ? "none" : r[k] || "–"}</td>`).join("")}<td>${W(id) ? (fk != null ? `×${(W(id)*fk).toFixed(1)}` : `×${W(id)}`) : "off"}</td></tr>`;
+  }
+  h += `</tbody></table>`;
+  $("guide").innerHTML = h;
+}
+
+/* ---------- meteogram (observations against the blend) ---------- */
+function renderMeteo(){
+  const b = S.blocks[S.cur]; const svg = $("meteo"); if (!b){ svg.innerHTML = ""; return; }
+  const W0 = svg.clientWidth || 900, H0 = 300, L = 44, R = W0 - 12, T = 16, B = H0 - 26;
+  const t0 = b.start - 30*H, t1 = b.start + 12*H, x = t => L + (t - t0)/(t1 - t0)*(R - L);
+  const panels = [["Temperature and dew point (°C)", T, T + 100], ["Wind, max in hour (kt)", T + 118, T + 178], ["Ceiling (ft, log) and visibility", T + 196, B]];
+  let h = "";
+  /* window */
+  h += `<rect class="win" x="${x(b.start)}" y="${T - 6}" width="${x(b.start + 6*H) - x(b.start)}" height="${B - T + 6}"/>`;
+  h += `<line class="now" x1="${x(Date.now())}" x2="${x(Date.now())}" y1="${T - 6}" y2="${B}"/>`;
+  for (let t = Math.ceil(t0/(6*H))*6*H; t <= t1; t += 6*H) h += `<text class="ax" x="${x(t)}" y="${H0 - 8}" text-anchor="middle">${p2(new Date(t).getUTCHours())}Z ${new Date(t).getUTCDate()}</text><line class="g" x1="${x(t)}" x2="${x(t)}" y1="${T}" y2="${B}"/>`;
+  panels.forEach(([lab, a]) => h += `<text class="pl" x="${L}" y="${a - 3}">${lab}</text>`);
+  const hours = []; for (let t = Math.floor(t0/H)*H; t <= t1; t += H) hours.push(t);
+  /* blend quantiles per hour from all model samples */
+  const q = (arr, p) => { const a = arr.filter(v => v != null && isFinite(v)).sort((m, n) => m - n); if (!a.length) return null; const i = (a.length - 1)*p, lo = Math.floor(i); return a[lo] + (a[Math.min(a.length - 1, lo + 1)] - a[lo])*(i - lo); };
+  const series = hours.map(t => { const sm = samplesFor(b.icao, t).filter(s => s.t != null || s.spd != null); return { t, sm }; });
+  const obsH = hours.map(t => [t, hourObs(S.obs[b.icao] || [], t)]).filter(x => x[1]);
+  /* temperature panel */
+  const tv = []; series.forEach(s => s.sm.forEach(x => { if (x.t != null) tv.push(x.t); if (x.td != null) tv.push(x.td); })); obsH.forEach(([, o]) => { if (o.t != null) tv.push(o.t); if (o.td != null) tv.push(o.td); });
+  if (tv.length){
+    let lo = Math.floor(Math.min(...tv)) - 1, hi = Math.ceil(Math.max(...tv)) + 1; const yT = v => panels[0][2] - (v - lo)/(hi - lo)*(panels[0][2] - panels[0][1]);
+    for (const v of [lo, Math.round((lo + hi)/2), hi]) h += `<text class="ax" x="${L - 6}" y="${yT(v) + 4}" text-anchor="end">${v}</text><line class="g" x1="${L}" x2="${R}" y1="${yT(v)}" y2="${yT(v)}"/>`;
+    for (const [key, cls] of [["t","tt"],["td","td"]]){
+      const band = series.map(s => [s.t + H, q(s.sm.map(z => z[key]), 0.1), q(s.sm.map(z => z[key]), 0.5), q(s.sm.map(z => z[key]), 0.9)]).filter(r => r[2] != null);
+      if (band.length){ h += `<path class="band ${cls}" d="M${band.map(r => `${x(r[0])},${yT(r[3])}`).join("L")}L${band.slice().reverse().map(r => `${x(r[0])},${yT(r[1])}`).join("L")}Z"/>`; h += `<path class="med ${cls}" d="M${band.map(r => `${x(r[0])},${yT(r[2])}`).join("L")}"/>`; }
+      obsH.forEach(([t, o]) => { if (o[key] != null) h += `<circle class="ob ${cls}" cx="${x(t + 50*60e3)}" cy="${yT(o[key])}" r="2.6"/>`; });
+    }
+  }
+  /* wind panel */
+  const wv = []; series.forEach(s => s.sm.forEach(z => z.spd != null && wv.push(z.spd))); obsH.forEach(([, o]) => o.spd != null && wv.push(o.spd));
+  if (wv.length){
+    const hi = Math.max(10, Math.ceil(Math.max(...wv)/5)*5), yW = v => panels[1][2] - v/hi*(panels[1][2] - panels[1][1]);
+    for (const v of [0, hi/2, hi]) h += `<text class="ax" x="${L - 6}" y="${yW(v) + 4}" text-anchor="end">${v}</text><line class="g" x1="${L}" x2="${R}" y1="${yW(v)}" y2="${yW(v)}"/>`;
+    const band = series.map(s => [s.t + H, q(s.sm.map(z => z.spd), 0.1), q(s.sm.map(z => z.spd), 0.5), q(s.sm.map(z => z.spd), 0.9)]).filter(r => r[2] != null);
+    if (band.length){ h += `<path class="band ww" d="M${band.map(r => `${x(r[0])},${yW(r[3])}`).join("L")}L${band.slice().reverse().map(r => `${x(r[0])},${yW(r[1])}`).join("L")}Z"/><path class="med ww" d="M${band.map(r => `${x(r[0])},${yW(r[2])}`).join("L")}"/>`; }
+    obsH.forEach(([t, o]) => { if (o.spd != null) h += `<circle class="ob ww" cx="${x(t + 30*60e3)}" cy="${yW(o.spd)}" r="2.6"/>`; });
+  }
+  /* ceiling / vis panel: log scale 100 ft .. 10000 ft; vis drawn as m/2 on the same log axis */
+  const yC = v => { const a = Math.log10(100), c = Math.log10(12000); return panels[2][2] - (Math.log10(clamp(v, 100, 12000)) - a)/(c - a)*(panels[2][2] - panels[2][1]); };
+  for (const v of [200, 1000, 3000, 10000]) h += `<text class="ax" x="${L - 6}" y="${yC(v) + 4}" text-anchor="end">${v >= 1000 ? v/1000 + "k" : v}</text><line class="g" x1="${L}" x2="${R}" y1="${yC(v)}" y2="${yC(v)}"/>`;
+  const cband = series.map(s => [s.t + H, q(s.sm.map(z => z.ceil == null ? (z.ceil === null ? 12000 : null) : z.ceil), 0.25), q(s.sm.map(z => z.ceil == null ? (z.ceil === null ? 12000 : null) : z.ceil), 0.5)]).filter(r => r[2] != null);
+  if (cband.length) h += `<path class="med cc" d="M${cband.map(r => `${x(r[0])},${yC(r[2])}`).join("L")}"/><path class="med cc q" d="M${cband.map(r => `${x(r[0])},${yC(r[1])}`).join("L")}"/>`;
+  const vband = series.map(s => [s.t + H, q(s.sm.map(z => z.vis), 0.5)]).filter(r => r[1] != null);
+  if (vband.length) h += `<path class="med vv" d="M${vband.map(r => `${x(r[0])},${yC(r[1]*1.2)}`).join("L")}"/>`;
+  obsH.forEach(([t, o]) => { if (o.ceil !== undefined) h += `<rect class="ob cc" x="${x(t + 30*60e3) - 2.5}" y="${yC(o.ceil === null ? 12000 : o.ceil) - 2.5}" width="5" height="5"/>`; if (o.vis != null) h += `<circle class="ob vv" cx="${x(t + 30*60e3)}" cy="${yC(o.vis*1.2)}" r="2.4"/>`; });
+  svg.setAttribute("viewBox", `0 0 ${W0} ${H0}`); svg.innerHTML = h;
+}
+
+/* ---------- submission ---------- */
+function renderSubmission(){
+  const day = currentDay(), dk = String(day.n);
+  const tx = texts[dk] = texts[dk] || { mc:["","","","",""], sa:"", date:"" };
+  $("mc").innerHTML = [0,1,2,3,4].map(i => `<label>Q${i + 1}<select data-q="${i}">${["","A","B","C","D"].map(o => `<option ${tx.mc[i] === o ? "selected" : ""}>${o}</option>`).join("")}</select></label>`).join("");
+  if (document.activeElement !== $("sa")) $("sa").value = tx.sa || defaultSA(day);
+  $("saCount").textContent = `${(($("sa").value.trim().match(/\S+/g)) || []).length} words`;
+  if (document.activeElement !== $("subDate")) $("subDate").value = tx.date || new Date().toISOString().slice(0, 10);
+  $("fname").textContent = fileName();
+  const missing = []; if (!prefs.team) missing.push("team name"); if (tx.mc.some(x => !x)) missing.push("multiple-choice answers");
+  S.blocks.forEach(b => { const o = official(b); if (o.some(r => ELEMENTS.some(e => e.k !== "wx" && !r[e.k]))) missing.push(`blank cells in ${b.icao}`); });
+  $("subCheck").innerHTML = missing.length ? `Still to fill: ${missing.join(", ")}.` : "Ready to submit.";
+  $("subCheck").className = missing.length ? "chk warn" : "chk ok";
+}
+function defaultSA(day){
+  if (day.n === 2) return "To: J2 (A39T) Intelligence Cell\nFrom: [Team Name] Weather Flight Cell\nDate/Time Submitted: [DTG]\nNLT Response Needed By: Friday, 23 October @ 1500Z\n\n1. Customer's Requirement:\n\n2. Specific Assets:\n\n3. Environmental Conditions Requested:\n\n4. Justification:\n";
+  return "";
+}
+const fileName = () => `${(prefs.team || "TEAMNAME").replace(/[^A-Za-z0-9-]/g, "")}_TFC26_${S.blocks[0] ? S.blocks[0].icao : "ICAO"}_${p2(currentDay().n === "C" ? 0 : currentDay().n)}.xlsx`;
+
+/* fill the competition workbook (template text kept exactly; only the entry cells change) */
+const xesc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+function setCell(xml, ref, val){
+  const re = new RegExp(`<c r="${ref}"( s="\\d+")?(?: t="\\w+")?\\s*(?:/>|>.*?</c>)`);
+  const m = xml.match(re);
+  const sAttr = m && m[1] ? m[1] : "";
+  const cell = val === "" || val == null ? `<c r="${ref}"${sAttr}/>` : `<c r="${ref}"${sAttr} t="inlineStr"><is><t xml:space="preserve">${xesc(val)}</t></is></c>`;
+  if (m) return xml.replace(re, cell);
+  /* cell not in the template row: insert it in column order */
+  const row = ref.match(/\d+/)[0];
+  return xml.replace(new RegExp(`(<row r="${row}"[^>]*>)(.*?)(</row>)`), (all, a, mid, c) => a + mid + cell + c);
+}
+function buildWorkbook(){
+  const day = currentDay(), tx = texts[String(day.n)] || { mc:[], sa:"" };
+  let x = TFC_TEMPLATE["xl/worksheets/sheet1.xml"];
+  const date = (tx.date || new Date().toISOString().slice(0, 10));
+  const d = new Date(date + "T00:00:00Z"); const ds = isFinite(d) ? `${p2(d.getUTCDate())} ${["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"][d.getUTCMonth()]} ${d.getUTCFullYear()}` : date;
+  x = setCell(x, "B3", ds); x = setCell(x, "B4", prefs.team || "");
+  const BL = [{ icao:"B5", r0:2 }, { icao:"B12", r0:13 }, { icao:"B23", r0:24 }];
+  const cols = { dir:"E", spd:"F", vis:"G", wx:"H", ceil:"I", t:"J", td:"K" };
+  S.blocks.slice(0, 3).forEach((b, bi) => {
+    x = setCell(x, BL[bi].icao, b.icao);
+    official(b).forEach((r, i) => { for (const e of ELEMENTS) x = setCell(x, cols[e.k] + (BL[bi].r0 + i), r[e.k] || ""); });
+  });
+  ["O","P","Q","R","S"].forEach((c, i) => x = setCell(x, c + "3", (tx.mc || [])[i] || ""));
+  if (tx.sa && tx.sa.trim()) x = setCell(x, "M8", "Short Answer / RFI / CC Brief:\n" + tx.sa.trim());
+  const files = Object.entries(TFC_TEMPLATE).map(([n, t]) => [n, n === "xl/worksheets/sheet1.xml" ? x : t]);
+  return zip(files);
+}
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++){ let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(b){ let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function zip(files){
+  const enc = new TextEncoder(), parts = [], central = []; let off = 0;
+  for (const [name, text] of files){
+    const nb = enc.encode(name), data = enc.encode(text), crc = crc32(data);
+    const lh = new DataView(new ArrayBuffer(30)); lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, nb.length, true);
+    parts.push(new Uint8Array(lh.buffer), nb, data);
+    const ch = new DataView(new ArrayBuffer(46)); ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint32(16, crc, true); ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, nb.length, true); ch.setUint32(42, off, true);
+    central.push(new Uint8Array(ch.buffer), nb); off += 30 + nb.length + data.length;
+  }
+  const csz = central.reduce((a, b) => a + b.length, 0), end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, csz, true); end.setUint32(16, off, true);
+  return new Blob([...parts, ...central, new Uint8Array(end.buffer)], { type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+}
+function download(blob, name){ const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
+/* save what was submitted, plus every source's own forecast, so the day can be graded later */
+function saveSubmission(){
+  const day = currentDay();
+  for (const b of S.blocks){
+    const key = `${day.n}|${blockKey(b)}`;
+    const alt = { "Optimizer (unedited)": (S.recs[blockKey(b)] || []).map(r => Object.fromEntries(ELEMENTS.map(e => [e.k, r[e.k] ? r[e.k].fmt : ""]))) };
+    for (const src of S.srcs[b.icao] || []) alt[src.def.name] = sourceForecast(b, src.def.id);
+    if (S.taf[b.icao]) alt["Official TAF"] = sourceForecast(b, "taf");
+    if ((S.obs[b.icao] || []).length) alt["Persistence"] = sourceForecast(b, "persist");
+    subs[key] = { day:day.n, icao:b.icao, start:b.start, team:prefs.team, saved:Date.now(), fc: official(b), alt };
+  }
+  saveSubs(); renderGrades();
+}
+
+/* ---------- grading ---------- */
+async function renderGrades(){
+  const list = Object.entries(subs).sort((a, b) => a[1].start - b[1].start);
+  if (!list.length){ $("grades").innerHTML = `<p class="mut">Nothing saved yet. Downloading the workbook (or pressing Save submission) stores the forecast here so it can be graded once the observations are in.</p>`; return; }
+  let h = "";
+  for (const [key, sb] of list){
+    const obs = S.obs[sb.icao];
+    if (!obs){ h += `<div class="gr"><h3>Day ${sb.day}: ${sb.icao} ${new Date(sb.start).toISOString().slice(5, 13).replace("T", " ")}Z</h3><button class="btn sm" data-loadobs="${sb.icao}">Load observations to grade</button> <button class="btn sm ghost" data-del="${key}">Remove</button></div>`; continue; }
+    const hrs = [0,1,2,3,4,5].map(i => hourObs(obs, sb.start + i*H));
+    const nObs = hrs.filter(Boolean).length;
+    const score = fc => { const t = {}; let tot = 0; hrs.forEach((o, i) => { if (!o) return; const g = gradeHour(fc[i], o, prefs.rules); for (const e of ELEMENTS){ t[e.k] = (t[e.k] || 0) + (g[e.k] ?? 0); tot += g[e.k] ?? 0; } }); return { t, tot }; };
+    const mine = score(sb.fc);
+    const comps = Object.entries(sb.alt || {}).map(([n, fc]) => [n, score(fc)]).sort((a, b) => b[1].tot - a[1].tot);
+    h += `<div class="gr"><h3>Day ${sb.day}: ${sb.icao} ${new Date(sb.start).toISOString().slice(5, 13).replace("T", " ")}Z <span>${nObs} of 6 hours observed</span> <button class="btn sm ghost" data-del="${key}">Remove</button></h3>`;
+    if (!nObs){ h += `<p class="mut">No observations for the valid window yet.</p></div>`; continue; }
+    h += `<table class="gt"><thead><tr><th></th>${ELEMENTS.map(e => `<th>${e.label}</th>`).join("")}<th>Total</th></tr></thead><tbody>`;
+    h += `<tr class="me"><td>Submitted</td>${ELEMENTS.map(e => `<td>${mine.t[e.k] ?? 0}</td>`).join("")}<td><b>${mine.tot}</b></td></tr>`;
+    comps.slice(0, 12).forEach(([n, s]) => h += `<tr class="${s.tot > mine.tot ? "beat" : ""}"><td>${n}</td>${ELEMENTS.map(e => `<td>${s.t[e.k] ?? 0}</td>`).join("")}<td>${s.tot}</td></tr>`);
+    h += `</tbody></table></div>`;
+  }
+  h += `<p class="mut">Grading uses the METAR/SPECI reports in each hour as described under Scoring assumptions. Rows in bold beat your submission, which helps pick the sources to trust at the next station.</p>`;
+  $("grades").innerHTML = h;
+}
+async function loadObsFor(icao){ try { const r = await fetchObs(icao); S.obs[icao] = r.obs; } catch (e){ toast("Couldn't load observations for " + icao); } renderGrades(); }
+
+/* workbook import (DecompressionStream), to grade a sheet made elsewhere */
+async function readZip(buf){
+  const dv = new DataView(buf), u8 = new Uint8Array(buf); let e = buf.byteLength - 22; while (e > 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+  const n = dv.getUint16(e + 10, true); let p = dv.getUint32(e + 16, true); const out = {};
+  for (let k = 0; k < n; k++){
+    const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true), nlen = dv.getUint16(p + 28, true), xlen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true), loc = dv.getUint32(p + 42, true);
+    const name = new TextDecoder().decode(u8.slice(p + 46, p + 46 + nlen)); p += 46 + nlen + xlen + clen;
+    const lnl = dv.getUint16(loc + 26, true), lxl = dv.getUint16(loc + 28, true), data = u8.slice(loc + 30 + lnl + lxl, loc + 30 + lnl + lxl + csize);
+    if (method === 0) out[name] = new TextDecoder().decode(data);
+    else { const ds = new DecompressionStream("deflate-raw"); const txt = await new Response(new Blob([data]).stream().pipeThrough(ds)).text(); out[name] = txt; }
+  }
+  return out;
+}
+async function importWorkbook(file){
+  if (typeof DecompressionStream === "undefined"){ toast("This browser can't read workbooks; use Chrome or Edge"); return; }
+  const files = await readZip(await file.arrayBuffer());
+  const ss = (files["xl/sharedStrings.xml"] || "").match(/<si>[\s\S]*?<\/si>/g) || [];
+  const strs = ss.map(s => (s.match(/<t[^>]*>([\s\S]*?)<\/t>/g) || []).map(t => t.replace(/<[^>]+>/g, "")).join(""));
+  const sheet = files["xl/worksheets/sheet1.xml"]; const cells = {};
+  (sheet.match(/<c r="[A-Z]+\d+"[^>]*?(?:\/>|>[\s\S]*?<\/c>)/g) || []).forEach(c => {
+    const ref = c.match(/r="([A-Z]+\d+)"/)[1]; const t = (c.match(/ t="(\w+)"/) || [])[1];
+    let v = (c.match(/<v>([\s\S]*?)<\/v>/) || [])[1]; const is = (c.match(/<is>([\s\S]*?)<\/is>/) || [])[1];
+    if (t === "s" && v != null) v = strs[+v]; else if (is) v = is.replace(/<[^>]+>/g, "");
+    if (v != null) cells[ref] = String(v).replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+  });
+  const fname = file.name.match(/_(\d{2})\.xlsx$/i); const dayN = fname ? +fname[1] : null;
+  const day = DAYS.find(d => d.n === dayN) || currentDay();
+  const cols = { dir:"E", spd:"F", vis:"G", wx:"H", ceil:"I", t:"J", td:"K" };
+  let added = 0;
+  [{ c:"B5", r0:2 }, { c:"B12", r0:13 }, { c:"B23", r0:24 }].forEach((bl, bi) => {
+    const icao = (cells[bl.c] || "").trim().slice(0, 4).toUpperCase(); const blk = day.blocks[bi];
+    const ic = /^[A-Z]{4}$/.test(icao) ? icao : blk ? blk[0] : null; if (!ic) return;
+    const st = blk && blk[0] === ic ? isoZ(blk[1]) : (day.blocks.find(x => x[0] === ic) ? isoZ(day.blocks.find(x => x[0] === ic)[1]) : null); if (!st) return;
+    const fc = [0,1,2,3,4,5].map(i => Object.fromEntries(ELEMENTS.map(e => [e.k, (cells[cols[e.k] + (bl.r0 + i)] || "").trim()])));
+    if (fc.every(r => ELEMENTS.every(e => !r[e.k]))) return;
+    subs[`${day.n}|${ic}|${st}`] = { day:day.n, icao:ic, start:st, team:cells.B4 || "", saved:Date.now(), fc, alt:{}, imported:file.name }; added++;
+  });
+  saveSubs(); toast(`Imported ${added} forecast${added === 1 ? "" : "s"} from ${file.name}`); renderGrades();
+}
+
+/* ---------- Day 3 ETAR outlook helper ---------- */
+function renderOutlook(){
+  const day = currentDay(), box = $("outlookCard");
+  if (!day.outlook){ box.hidden = true; return; }
+  box.hidden = false;
+  const ic = day.outlook.icao, start = Date.parse(day.outlook.from + "T00:00:00Z");
+  if (!(S.srcs[ic] || []).length){ $("outlookTxt").value = $("outlookTxt").value || ""; $("outlookNote").textContent = S.loading ? "Loading ETAR guidance" : "No ETAR guidance loaded"; return; }
+  const lines = [];
+  const pct = x => Math.round(x*100);
+  for (let d = 0; d < day.outlook.days; d++){
+    const a = start + d*86400e3, hours = []; for (let t = a; t < a + 24*H; t += H) hours.push(samplesFor(ic, t).filter(s => s.cats || s.t != null));
+    const flat = hours.flat(); const tw = flat.reduce((s, x) => s + x.w, 0) || 1;
+    const P = f => flat.reduce((s, x) => s + (f(x) ? x.w : 0), 0)/tw;
+    const anyH = f => Math.max(...hours.map(hs => { const w = hs.reduce((s, x) => s + x.w, 0) || 1; return hs.reduce((s, x) => s + (f(x) ? x.w : 0), 0)/w; }));
+    const ceilLow = P(x => x.ceil != null && x.ceil < 1000), ceilAny = P(x => x.ceil != null && x.ceil < 3000);
+    const rain = anyH(x => x.cats && x.cats.has(WX.LIQ)), snow = anyH(x => x.cats && x.cats.has(WX.FROZ)), fz = anyH(x => x.cats && x.cats.has(WX.FZ));
+    const fog = anyH(x => x.vis != null && x.vis < 1000), gust = flat.map(x => x.spd).filter(v => v != null).sort((m, n) => m - n);
+    const g90 = gust.length ? gust[Math.floor(gust.length*0.9)] : null;
+    const ts = Math.max(...hours.map((hs, k) => { const sm = (S.srcs[ic] || []).flatMap(src => src.members.map(m => m.wc ? m.wc[S.TL.idx(a + k*H + H)] : undefined)).filter(v => v != null); return sm.length ? sm.filter(v => v >= 95).length/sm.length : 0; }));
+    const temps = flat.map(x => x.t).filter(v => v != null).sort((m, n) => m - n);
+    const sky = ceilLow > 0.4 ? "Low ceilings (below 1,000 ft) much of the day" : ceilAny > 0.5 ? "Mostly cloudy with ceilings 1,000–3,000 ft at times" : ceilAny > 0.25 ? "Variable cloud, occasional ceilings below 3,000 ft" : "Mostly scattered cloud or better";
+    const wx = [rain > 0.15 ? `rain ${pct(rain)}%` : "", snow > 0.1 ? `snow ${pct(snow)}%` : "", fz > 0.05 ? `freezing precipitation ${pct(fz)}%` : "", ts > 0.05 ? `thunderstorms ${pct(ts)}%` : ""].filter(Boolean).join(", ") || "precipitation unlikely";
+    const hz = [fog > 0.15 ? `fog/visibility below 1,000 m (${pct(fog)}% at worst hour)` : "", g90 != null && g90 >= 25 ? `gusts to ${Math.round(g90)} kt` : "", fz > 0.05 || (temps.length && temps[Math.floor(temps.length*0.1)] <= 0) ? "icing/frost risk" : ""].filter(Boolean).join("; ") || "no significant hazards expected";
+    lines.push(`T+${3 + d} ${new Date(a).toUTCString().slice(0, 11)}: ${sky}. Precipitation/convection: ${wx}. Hazards: ${hz}. Temperatures ${temps.length ? `${fmtTemp(temps[Math.floor(temps.length*0.1)])} to ${fmtTemp(temps[Math.floor(temps.length*0.9)])} °C` : "n/a"}. Planning implications: [your assessment for Sable-6 / Raven-4 and JTF operations].`);
+  }
+  if (day.outlook.callout){
+    const a = isoZ(day.outlook.callout[0]), b = isoZ(day.outlook.callout[1]); const rs = []; for (let t = a; t < b; t += H){ const sm = samplesFor(ic, t); if (sm.length) rs.push(optimizeHour(sm, prefs.rules)); }
+    if (rs.length){ const g = k => rs.map(r => r[k] ? r[k].fmt : "").filter(Boolean); const ce = g("ceil"), vi = g("vis"), sp = g("spd"), dr = g("dir"), w = g("wx").filter(Boolean);
+      lines.push(`T+5 callout, ${new Date(a).toUTCString().slice(0, 11)} ${p2(new Date(a).getUTCHours())}00–${p2(new Date(b).getUTCHours())}00Z: most likely ceiling ${ce.join("/")} (hundreds ft), visibility ${vi.join("/")} m, wind ${dr[0] || "---"} at up to ${Math.max(...sp.map(Number))} kt${w.length ? `, ${[...new Set(w)].join("/")} precipitation possible` : ""}. Impacts: [Sable-6 EO/IR line of sight and mobility; Raven-4 launch/recovery and collection].`); }
+  }
+  $("outlookNote").textContent = "Draft generated from the blend; edit before sending. The asset impacts need the J2 thresholds from the Day 2 RFI.";
+  if (!$("outlookTxt").dataset.edited) $("outlookTxt").value = lines.join("\n\n");
+}
+
+/* ---------- sources & settings ---------- */
+function renderSources(){
+  const b = S.blocks[S.cur]; const have = new Set(b ? (S.srcs[b.icao] || []).map(s => s.def.id) : []);
+  if (b && S.taf[b.icao]) have.add("taf"); if (b && (S.obs[b.icao] || []).length) have.add("persist");
+  $("srcGrid").innerHTML = Object.keys(FAM).map(f => `<div><h3>${FAM[f]}</h3>${ALL_SRC.filter(s => s.fam === f).map(s => `<div class="srow ${have.has(s.id) ? "" : "na"}"><input type="checkbox" data-src="${s.id}" ${prefs.enabled[s.id] !== false ? "checked" : ""}><span>${s.name}${have.has(s.id) ? "" : ` <small>${f === "mos" && b && !isUS(b.icao) ? "US only" : S.status[s.id] && S.status[s.id] !== "ok" ? S.status[s.id] : "no data here"}</small>`}</span><select data-w="${s.id}">${[0.5,1,2,3].map(x => `<option ${x == (prefs.weight[s.id] ?? 1) ? "selected" : ""}>${x}</option>`).join("")}</select></div>`).join("")}</div>`).join("");
+  $("optSkill").checked = prefs.skill; $("optBias").checked = prefs.bias; $("wPersist").value = prefs.wPersist; $("wTaf").value = prefs.wTaf;
+  const R = prefs.rules; $("rNone").value = R.noneWxPts; $("rFz").checked = R.fzMissPenalty; $("rCeil").value = R.noCeilCode; $("rAny").checked = R.tempAnyOb;
+}
+let toastT = null;
+function toast(m){ const t = $("toast"); t.textContent = m; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2600); }
+
+/* ---------- demo data ---------- */
+function rng(seed){ let x = seed >>> 0 || 1; return () => (x = (x*1664525 + 1013904223) >>> 0)/4294967296; }
+function demoBase(icao, t){ const st = STATIONS[icao] || { lat:50 }; const cold = st.lat > 60; const h = new Date(t).getUTCHours(); const lt = (h + (st.lon || 0)/15 + 24) % 24; const front = 30 + (icao.charCodeAt(1) % 20);
+  const k = (t - Date.now())/H; const post = k > front; return { t:(cold ? -6 : 7) + 4*Math.sin((lt - 9)/24*2*Math.PI) + (post ? -3 : 0), td:(cold ? -9 : 4) + (post ? -2 : 0), ws: 8 + 6*Math.sin(k/9) + (post ? 6 : 0), dir: post ? 320 : 220, vis: Math.abs(k - front) < 4 ? 3000 : 9999, ceil: Math.abs(k - front) < 6 ? 900 : post ? null : 3500, wc: Math.abs(k - front) < 4 ? (cold ? 73 : 61) : 2 }; }
+async function demoOM(def, ens, stations, TL){
+  await new Promise(r => setTimeout(r, 50 + Math.random()*250));
+  if (def.fam === "regional" && !/icond2|iconeu|ukv|hrdps/.test(def.id)) throw new Error("demo");
+  return stations.map((st, si) => { const r = rng(def.id.length*31 + si*7 + def.model.length); const n = ens ? 12 : 1; return Array.from({ length:n }, () => { const m = blankMember(TL); const bias = (r() - 0.5)*3; ["ws","wg","ccl","cc"].forEach(k => m[k] = new Array(TL.n).fill(undefined));
+    for (let i = 0; i < TL.n; i++){ const b = demoBase(st.icao, TL.t0 + i*H); m.t[i] = b.t + bias + (r() - 0.5); m.td[i] = Math.min(m.t[i], b.td + bias*0.5); m.ws[i] = Math.max(0, b.ws + (r() - 0.5)*4); m.wg[i] = m.ws[i]*1.4; m.dir[i] = (b.dir + (r() - 0.5)*40 + 360) % 360; m.vis[i] = b.vis*(0.7 + r()*0.6); m.wc[i] = b.wc; m.ceil[i] = b.ceil == null ? null : b.ceil*(0.7 + r()*0.6); }
+    m.spd = m.ws.map((w, i) => Math.max(w, m.wg[i])); return finishMember(m, TL); }); });
+}
+function demoObs(icao){
+  const now = Math.floor(Date.now()/H)*H, out = [];
+  for (let t = now - 48*H; t <= now; t += H){ const b = demoBase(icao, t + 53*60e3); const d = new Date(t + 53*60e3);
+    const wind = `${p3(Math.round(b.dir/10)*10)}${p2(Math.round(b.ws + 3))}${b.ws > 14 ? "G" + p2(Math.round(b.ws + 12)) : ""}KT`;
+    const vis = b.vis >= 9999 ? "9999" : String(Math.round(b.vis/100)*100).padStart(4, "0");
+    const wx = b.wc >= 71 ? " -SN" : b.wc >= 61 ? " -RA" : ""; const cl = b.ceil == null ? "FEW040" : `BKN${p3(Math.round(b.ceil/100))}`;
+    out.push(parseMETAR(`METAR ${icao} ${p2(d.getUTCDate())}${p2(d.getUTCHours())}53Z ${wind} ${vis}${wx} ${cl} ${fmtTemp(b.t + 1)}/${fmtTemp(b.td)} Q1012`, d.getTime())); }
+  return { obs: out.filter(Boolean), from:"demo" };
+}
+function demoTAF(icao){ const d = new Date(Math.floor(Date.now()/(6*H))*6*H); const dd = p2(d.getUTCDate()), hh = p2(d.getUTCHours()); const e = new Date(d.getTime() + 30*H);
+  return { taf: parseTAF(`TAF ${icao} ${dd}${hh}00Z ${dd}${hh}/${p2(e.getUTCDate())}${p2(e.getUTCHours())} 22010KT 9999 SCT035 BECMG ${dd}${p2((d.getUTCHours() + 8) % 24)}/${dd}${p2((d.getUTCHours() + 10) % 24)} 32016G26KT 4000 -RA BKN009`, Date.now()), from:"demo" }; }
+
+/* ============================================================
+   Events
+   ============================================================ */
+function bind(){
+  $("daySel").onchange = e => { prefs.day = e.target.value; savePrefs(); S.cur = 0; loadDay(); };
+  $("custIcao").value = prefs.custom.icao || ""; $("custStart").value = prefs.custom.start || "";
+  $("custGo").onclick = () => { prefs.custom = { icao:$("custIcao").value, start:$("custStart").value }; savePrefs(); S.cur = 0; loadDay(); };
+  $("team").oninput = e => { prefs.team = e.target.value.trim(); savePrefs(); $("fname").textContent = fileName(); renderSubmission(); };
+  $("tabs").onclick = e => { const b = e.target.closest("[data-i]"); if (!b) return; S.cur = +b.dataset.i; closePop(); renderAll(); };
+  $("block").onclick = e => { const td = e.target.closest("td.cell"); if (td) openPop(td); };
+  document.addEventListener("mousedown", e => { if (S.popover && !S.popover.pop.contains(e.target) && !e.target.closest("td.cell")) closePop(); });
+  $("elSel").onclick = e => { const b = e.target.closest("[data-k]"); if (!b) return; prefs.el = b.dataset.k; savePrefs(); renderGuidance(); };
+  $("refresh").onclick = () => { if (!S.loading) loadDay(); };
+  $("mc").onchange = e => { const q = e.target.dataset.q; if (q == null) return; const dk = String(currentDay().n); texts[dk].mc[+q] = e.target.value; saveTexts(); renderSubmission(); };
+  $("sa").oninput = e => { const dk = String(currentDay().n); texts[dk].sa = e.target.value; saveTexts(); $("saCount").textContent = `${((e.target.value.trim().match(/\S+/g)) || []).length} words`; };
+  $("subDate").onchange = e => { texts[String(currentDay().n)].date = e.target.value; saveTexts(); };
+  $("dl").onclick = () => { saveSubmission(); download(buildWorkbook(), fileName()); toast("Workbook downloaded and saved for grading"); };
+  $("saveSub").onclick = () => { saveSubmission(); toast("Saved for grading"); };
+  $("copyTxt").onclick = async () => { const day = currentDay(); const t = S.blocks.map(b => `${b.icao} ${new Date(b.start).toISOString().slice(0, 13)}Z\n` + official(b).map((r, i) => `Hr ${p2(i)}-${p2(i + 1)}  ${ELEMENTS.map(e => (r[e.k] || "-").padEnd(e.k === "wx" ? 22 : 4)).join(" ")}`).join("\n")).join("\n\n"); try { await navigator.clipboard.writeText(t); toast("Forecast copied as text"); } catch (e){ toast("Copy failed"); } };
+  $("importWb").onchange = e => { const f = e.target.files[0]; if (f) importWorkbook(f).catch(err => toast("Couldn't read that workbook")); e.target.value = ""; };
+  $("exportSubs").onclick = () => download(new Blob([JSON.stringify(subs, null, 1)], { type:"application/json" }), `TFC26_${prefs.team || "team"}_submissions.json`);
+  $("importSubs").onchange = async e => { const f = e.target.files[0]; if (!f) return; try { Object.assign(subs, JSON.parse(await f.text())); saveSubs(); renderGrades(); toast("Submissions imported"); } catch (err){ toast("Not a submissions file"); } e.target.value = ""; };
+  $("grades").onclick = e => { const l = e.target.closest("[data-loadobs]"); if (l) loadObsFor(l.dataset.loadobs); const d = e.target.closest("[data-del]"); if (d && confirm("Remove this saved forecast?")){ delete subs[d.dataset.del]; saveSubs(); renderGrades(); } };
+  $("srcGrid").onchange = e => { const t = e.target; if (t.dataset.src) prefs.enabled[t.dataset.src] = t.checked; if (t.dataset.w) prefs.weight[t.dataset.w] = +t.value; savePrefs(); computeAll(); renderAll(); };
+  $("optSkill").onchange = e => { prefs.skill = e.target.checked; savePrefs(); computeAll(); renderAll(); };
+  $("optBias").onchange = e => { prefs.bias = e.target.checked; savePrefs(); computeAll(); renderAll(); };
+  $("wPersist").onchange = e => { prefs.wPersist = +e.target.value; savePrefs(); computeAll(); renderAll(); };
+  $("wTaf").onchange = e => { prefs.wTaf = +e.target.value; savePrefs(); computeAll(); renderAll(); };
+  const rset = () => { prefs.rules = { noneWxPts:+$("rNone").value || 0, fzMissPenalty:$("rFz").checked, noCeilCode:($("rCeil").value || "999").trim().toUpperCase(), tempAnyOb:$("rAny").checked }; savePrefs(); computeAll(); renderAll(); };
+  ["rNone","rFz","rCeil","rAny"].forEach(id => $(id).onchange = rset);
+  $("outlookTxt").oninput = e => { e.target.dataset.edited = "1"; };
+  $("outlookDl").onclick = () => download(new Blob([$("outlookTxt").value], { type:"text/plain" }), `${(prefs.team || "TEAMNAME").replace(/[^A-Za-z0-9-]/g, "")}_TFC26_ETAR-OUTLOOK_03.txt`);
+  $("outlookRegen").onclick = () => { delete $("outlookTxt").dataset.edited; renderOutlook(); };
+  window.addEventListener("resize", () => renderMeteo());
+  setInterval(renderHeader, 30000);
+}
+if (prefs.day == null) prefs.day = String(defaultDay().n);
+bind();
+loadDay();
+</script>
+</body></html>

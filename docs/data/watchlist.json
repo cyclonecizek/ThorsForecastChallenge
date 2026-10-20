@@ -1,0 +1,4 @@
+{
+  "comment": "ICAOs the workflow mirrors (METAR history, TAF, station info, and MOS for US stations). Add any station you want to forecast or grade.",
+  "icaos": ["PAED", "PAEI", "CYQX", "CYYR", "CYFB", "BGSF", "EGQS", "ETAR", "KBGR"]
+}
