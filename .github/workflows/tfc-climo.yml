@@ -1,0 +1,47 @@
+name: TFC climatology
+
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Rebuild every station (otherwise only missing or stale ones)"
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths: ["pipeline/tfc_climo.py", "docs/data/watchlist.json", ".github/workflows/tfc-climo.yml"]
+  schedule:
+    - cron: "17 3 * * 1"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tfc-climo
+  cancel-in-progress: false
+
+jobs:
+  climo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build station climatologies (IEM METAR archive)
+        env:
+          CLIMO_FORCE: ${{ inputs.force && '1' || '0' }}
+        run: python pipeline/tfc_climo.py
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/data/clim/
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          git commit -m "Climatology $(date -u +%Y-%m-%d)"
+          for i in 1 2 3; do
+            git pull --rebase --autostash && git push && exit 0
+            sleep $((i * 10))
+          done
+          exit 1
