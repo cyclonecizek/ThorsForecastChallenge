@@ -46,6 +46,13 @@ async function fetchTAF(icao){
   return { taf: parseTAF(raw, Date.now()), from };
 }
 
+/* ---------- climatology (built by pipeline/tfc_climo.py) ---------- */
+async function fetchClim(icao){
+  if (DEMO) return demoClim(icao);
+  const { j } = await mirrorFirst(`data/clim/${icao}.json`, null);
+  return j && j.recs && j.recs.length ? j : null;
+}
+
 /* ---------- MOS (US stations, IEM) ---------- */
 const MOS_MODELS = [
   { id:"lav", name:"LAMP",          model:"LAV" },

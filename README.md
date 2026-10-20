@@ -28,6 +28,14 @@ METAR/SPECI reports once the valid window has passed.
   observations are in, the Grading panel scores your submission and shows which sources would have
   scored better. Teammates can share saved forecasts with Export / Import, and any completed
   workbook can be imported and graded.
+* **Climatology**: `pipeline/tfc_climo.py` pulls every METAR/SPECI from 8 Oct to 12 Nov for each
+  past year since 2015 (IEM archive) and stores the grader-style hourly values. The page compares
+  climatology with the guidance for the valid window (fog, low ceilings, calm winds, precipitation
+  types) and can blend it in as a source from the Model mixer.
+* **Pre-submission check**: Download runs a check first. It flags blank or badly formatted cells,
+  dew point above temperature, weather that doesn't fit the visibility or temperature, edits that
+  cost expected points, stale guidance, the suspense, blank answers, the RFI format (Day 2) and the
+  250-word brief limit (Day 3).
 * **Day 3 helper**: a draft ETAR Three-Day Outlook (T+3 to T+5) with the T+5 0600–1200Z callout,
   generated from the blend, to edit and download.
 
@@ -43,7 +51,8 @@ METAR/SPECI reports once the valid window has passed.
    ```
 3. Settings > Actions > General > Workflow permissions: Read and write.
 4. Settings > Pages: Deploy from a branch, `main`, folder `/docs`.
-5. Actions tab: run "TFC observation mirror" once. It then runs every 15 minutes.
+5. Actions tab: run "TFC observation mirror" once (it then runs every 15 minutes) and
+   "TFC climatology" once (about 10–20 minutes; it then refreshes weekly).
 6. Open `https://<you>.github.io/ThorsForecastChallenge/` (`?demo=1` shows synthetic data).
 
 ## The observation mirror
