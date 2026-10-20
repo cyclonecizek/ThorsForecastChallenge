@@ -1,0 +1,40 @@
+name: TFC observation mirror
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["pipeline/**", "docs/data/watchlist.json", ".github/workflows/tfc-mirror.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tfc-mirror
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Mirror METARs, TAFs, station info and MOS
+        run: python pipeline/tfc_mirror.py
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/data/
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          git commit -m "Obs mirror $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3; do
+            git pull --rebase --autostash && git push && exit 0
+            sleep $((i * 10))
+          done
+          exit 1
