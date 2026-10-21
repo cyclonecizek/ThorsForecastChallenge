@@ -279,14 +279,18 @@ ul.chkl li.info{ border-color:var(--accent); } ul.chkl li.ok{ border-color:var(-
         <label>Persistence weight <input type="number" id="wPersist" min="0" max="10" step="0.5"></label>
         <label>TAF weight <input type="number" id="wTaf" min="0" max="10" step="0.5"></label>
       </div>
-      <h3 style="margin-top:16px">Scoring assumptions (confirm with A39T)</h3>
+      <h3 style="margin-top:16px">Scoring rules</h3>
       <div class="opts" style="margin-top:4px">
         <label>Points for blank Present Wx when nothing is observed <input type="number" id="rNone" min="0" max="6" step="1"></label>
+        <label>Points when weather is forecast but none observed <input type="number" id="rFa" min="-3" max="0" step="0.5"></label>
+        <label>Only forecast weather at a chance of at least <input type="number" id="rMin" min="0" max="90" step="5"> %</label>
+        <label>No significant weather entry <select id="rWxCode"><option value="">blank</option><option value="None">None</option></select></label>
+        <label>No-ceiling entry <input type="text" id="rCeil" maxlength="4" placeholder="blank"></label>
         <label><input type="checkbox" id="rFz"> −2 when freezing precip is observed but not forecast</label>
-        <label>No-ceiling code <input type="text" id="rCeil" maxlength="4"></label>
         <label><input type="checkbox" id="rAny"> Temp/dew point accurate if it matches any ob in the hour</label>
         <label><input type="checkbox" id="rOk"> These match A39T's answer</label>
       </div>
+      <p class="note">Set from the commissioner's reply: no significant weather and no ceiling are left blank; none forecast against none observed scores about 0; no ceiling observed against a blank Min Cig gets full points; the latest workbook sent is the one graded. Still unconfirmed: whether forecasting weather that doesn't occur costs points (set to 0 until we hear otherwise) and the minimum chance before forecasting weather (a hedge against that).</p>
       <p class="note">Hourly verification: all METAR/SPECI reports within each hour. Wind speed is the highest speed or gust reported, direction is from that report (VRB scores 0), visibility and ceiling are the lowest, present weather is any category reported (vicinity ignored), temperature and dew point come from the routine METAR. The scoring chart doesn't say how a blank Present Wx or "no ceiling" is graded, so those are settings here; the optimizer adapts to whatever you set.</p>
     </details>
   </div>
@@ -317,7 +321,9 @@ const store = {
   set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch (e){ /* storage unavailable */ } },
 };
 const prefs = Object.assign({ day:null, team:"", enabled:{}, weight:{}, skill:true, wmode:"skill", topN:0, bias:true, wPersist:3, wTaf:2, rules:{ ...DEFAULT_RULES }, el:"t", custom:{ icao:"", start:"" } }, store.get(LS.prefs, {}));
-prefs.rules = Object.assign({ ...DEFAULT_RULES }, prefs.rules || {});
+{ const old = prefs.rules || {};
+  /* rules saved before the commissioner's answers are replaced (keeping the two settings he didn't address) */
+  prefs.rules = (old.version || 1) < 2 ? { ...DEFAULT_RULES, tempAnyOb: !!old.tempAnyOb, fzMissPenalty: !!old.fzMissPenalty } : Object.assign({ ...DEFAULT_RULES }, old); }
 if (prefs.skill === false && prefs.wmode === "skill") prefs.wmode = "equal";
 let edits = store.get(LS.edits, {});
 let subs = store.get(LS.subs, {});
@@ -575,12 +581,12 @@ function official(b){
 }
 function validate(k, v){
   v = String(v ?? "").trim().toUpperCase();
-  if (k === "wx") return WX_LIST.includes(v) ? v : WX_LIST.find(x => x.toUpperCase() === v) ?? null;
+  if (k === "wx"){ if (v === "NONE") return ""; return WX_LIST.includes(v) ? v : WX_LIST.find(x => x.toUpperCase() === v) ?? null; }
   if (v === "") return "";
   if (k === "dir"){ if (v === "VRB") return null; const n = parseInt(v, 10); if (!isFinite(n) || n < 0 || n > 360) return null; return p3(Math.round(n/10)*10); }
   if (k === "spd"){ const n = parseInt(v, 10); return isFinite(n) && n >= 0 && n < 200 ? p2(n) : null; }
   if (k === "vis"){ const n = parseInt(v, 10); if (!isFinite(n) || n < 0) return null; return String(n >= 9999 ? 9999 : n).padStart(4, "0"); }
-  if (k === "ceil"){ if (v === "NONE" || v === prefs.rules.noCeilCode) return prefs.rules.noCeilCode; const n = parseInt(v, 10); return isFinite(n) && n >= 0 && n < 999 ? p3(n) : null; }
+  if (k === "ceil"){ if (v === "NONE" || v === "-" || v === prefs.rules.noCeilCode) return prefs.rules.noCeilCode; const n = parseInt(v, 10); return isFinite(n) && n >= 0 && n < 999 ? p3(n) : null; }
   if (k === "t" || k === "td"){ const n = parseTemp(v); return n == null ? null : fmtTemp(n); }
   return v;
 }
@@ -618,7 +624,7 @@ function renderBlock(){
     for (const e of ELEMENTS){
       const v = off[i][e.k], R = r[e.k], isEd = (ed[i] || {})[e.k] !== undefined;
       const ev = R && R.evf ? R.evf(v) : null; if (ev != null){ rowEV += ev; } maxT += e.max;
-      h += `<td class="cell ${evClass(ev, e.max)} ${isEd ? "ed" : ""}" data-h="${i}" data-k="${e.k}" title="${R ? "Expected points " + (ev ?? 0).toFixed(2) + " of " + e.max : "No guidance"}">${e.k === "wx" ? (v ? `<span class="wx">${v}</span>` : `<span class="none">none</span>`) : (v || "<span class='none'>–</span>")}${ev != null ? `<i>${ev.toFixed(1)}</i>` : ""}</td>`;
+      h += `<td class="cell ${evClass(ev, e.max)} ${isEd ? "ed" : ""}" data-h="${i}" data-k="${e.k}" title="${R ? "Expected points " + (ev ?? 0).toFixed(2) + " of " + e.max : "No guidance"}">${e.k === "wx" ? (v ? `<span class="wx">${v}</span>` : `<span class="none">none</span>`) : e.k === "ceil" && (v === "" || v === prefs.rules.noCeilCode) ? `<span class="none">none</span>` : (v || "<span class='none'>–</span>")}${ev != null ? `<i>${ev.toFixed(1)}</i>` : ""}</td>`;
     }
     total += rowEV;
     h += `<td class="tot">${rowEV.toFixed(1)}</td></tr>`;
@@ -638,8 +644,9 @@ function openPop(td){
   closePop();
   const b = S.blocks[S.cur], key = blockKey(b), i = +td.dataset.h, k = td.dataset.k;
   const R = (S.recs[key] || [])[i] && S.recs[key][i][k], e = ELEMENTS.find(x => x.k === k), cur = official(b)[i][k];
-  const fmtAlt = v => k === "dir" ? p3(v) : k === "spd" ? p2(v) : k === "vis" ? String(v).padStart(4, "0") : k === "ceil" ? (v === "NONE" ? `${prefs.rules.noCeilCode} (no ceiling)` : p3(v)) : k === "wx" ? (v || "none") : fmtTemp(v);
+  const fmtAlt = v => k === "dir" ? p3(v) : k === "spd" ? p2(v) : k === "vis" ? String(v).padStart(4, "0") : k === "ceil" ? (v === "NONE" ? (prefs.rules.noCeilCode ? `${prefs.rules.noCeilCode} (no ceiling)` : "no ceiling (blank)") : p3(v)) : k === "wx" ? (v || "none") : fmtTemp(v);
   const altVal = v => k === "ceil" && v === "NONE" ? prefs.rules.noCeilCode : k === "wx" ? v : fmtAlt(v).split(" ")[0];
+  const altLab = v => fmtAlt(v);
   let h = `<div class="pophead"><b>${e.label}</b> ${hourLabel(b, i)}<button class="x" id="popX" aria-label="Close">×</button></div>`;
   if (R){
     h += `<div class="alts">${R.alts.map(a => `<button type="button" data-v="${altVal(a.v)}" class="${altVal(a.v) === cur ? "on" : ""}"><span>${fmtAlt(a.v)}</span><i>${a.ev.toFixed(2)}</i></button>`).join("")}</div>`;
@@ -821,7 +828,7 @@ function buildWorkbook(){
   const cols = { dir:"E", spd:"F", vis:"G", wx:"H", ceil:"I", t:"J", td:"K" };
   S.blocks.slice(0, 3).forEach((b, bi) => {
     x = setCell(x, BL[bi].icao, b.icao);
-    official(b).forEach((r, i) => { for (const e of ELEMENTS) x = setCell(x, cols[e.k] + (BL[bi].r0 + i), r[e.k] || ""); });
+    official(b).forEach((r, i) => { for (const e of ELEMENTS){ let v = r[e.k] || ""; if (e.k === "wx" && !v) v = prefs.rules.wxNoneCode || ""; x = setCell(x, cols[e.k] + (BL[bi].r0 + i), v); } });
   });
   ["O","P","Q","R","S"].forEach((c, i) => x = setCell(x, c + "3", (tx.mc || [])[i] || ""));
   if (tx.sa && tx.sa.trim()) x = setCell(x, "M8", "Short Answer / RFI / CC Brief:\n" + tx.sa.trim());
@@ -858,7 +865,7 @@ function runChecks(){
       const at = `${b.icao} Hr ${p2(i)}-${p2(i + 1)}`;
       for (const e of ELEMENTS){
         const v = r[e.k];
-        if (e.k !== "wx" && !v) add("err", `${at}: ${e.label} is blank.`);
+        if (e.k !== "wx" && !(e.k === "ceil" && prefs.rules.noCeilCode === "") && !v) add("err", `${at}: ${e.label} is blank.`);
         else if (v && validate(e.k, v) !== v) add("err", `${at}: ${e.label} "${v}" isn't in the required format.`);
         const R = rec[i] && rec[i][e.k];
         if (R && (ed[i] || {})[e.k] !== undefined){ const loss = R.ev - (R.evf(v) ?? 0); if (loss > 0.75) add("warn", `${at}: your ${e.label} ${v || "none"} is worth ${loss.toFixed(1)} fewer expected points than the recommended ${R.fmt || "none"}. Keep it only if you know something the guidance doesn't.`); }
@@ -882,6 +889,7 @@ function runChecks(){
   if (day.n === 2 && words && !/1\. Customer/i.test(tx.sa)) add("warn", "The RFI doesn't follow the Annex B format (Customer's Requirement, Specific Assets, Environmental Conditions Requested, Justification).");
   if (day.n === 3 && words > 250) add("err", `The commander briefing is ${words} words; the limit is 250.`);
   if (day.n === 3 && !S.outlookSaved) add("info", "The Three-Day ETAR Outlook goes as a separate file. Download it from the Outlook panel and attach it to the email.");
+  if (day.suspense && isoZ(day.suspense) - Date.now() > 3*H) add("info", "The commissioner takes the latest workbook you send, so send a safety copy now and a final one closer to the suspense with the newest guidance.");
   if (!prefs.rules.confirmed) add("info", "The scoring assumptions aren't marked as confirmed by A39T, so the optimizer is using defaults for blank weather and no-ceiling cases.");
   return out;
 }
@@ -968,7 +976,7 @@ async function importWorkbook(file){
     const icao = (cells[bl.c] || "").trim().slice(0, 4).toUpperCase(); const blk = day.blocks[bi];
     const ic = /^[A-Z]{4}$/.test(icao) ? icao : blk ? blk[0] : null; if (!ic) return;
     const st = blk && blk[0] === ic ? isoZ(blk[1]) : (day.blocks.find(x => x[0] === ic) ? isoZ(day.blocks.find(x => x[0] === ic)[1]) : null); if (!st) return;
-    const fc = [0,1,2,3,4,5].map(i => Object.fromEntries(ELEMENTS.map(e => [e.k, (cells[cols[e.k] + (bl.r0 + i)] || "").trim()])));
+    const fc = [0,1,2,3,4,5].map(i => Object.fromEntries(ELEMENTS.map(e => { let v = (cells[cols[e.k] + (bl.r0 + i)] || "").trim(); if (e.k === "wx" && /^none$/i.test(v)) v = ""; return [e.k, v]; })));
     if (fc.every(r => ELEMENTS.every(e => !r[e.k]))) return;
     subs[`${day.n}|${ic}|${st}`] = { day:day.n, icao:ic, start:st, team:cells.B4 || "", saved:Date.now(), fc, alt:{}, imported:file.name }; added++;
   });
@@ -1041,7 +1049,7 @@ function renderSources(){
   const nOn = rows.filter(r => have.has(r.id) && eff(r.id) > 0).length;
   $("mixSum").textContent = sk ? `${nOn} sources in the blend for ${ic}; verified over the last ${sk.nHours} observed hours` : "";
   $("optBias").checked = prefs.bias; $("wPersist").value = prefs.wPersist; $("wTaf").value = prefs.wTaf;
-  const Rr = prefs.rules; $("rNone").value = Rr.noneWxPts; $("rFz").checked = Rr.fzMissPenalty; $("rCeil").value = Rr.noCeilCode; $("rAny").checked = Rr.tempAnyOb; $("rOk").checked = !!Rr.confirmed;
+  const Rr = prefs.rules; $("rFa").value = Rr.falseAlarmPts ?? 0; $("rMin").value = Rr.minWxProb ?? 0; $("rWxCode").value = Rr.wxNoneCode || ""; $("rNone").value = Rr.noneWxPts; $("rFz").checked = Rr.fzMissPenalty; $("rCeil").value = Rr.noCeilCode; $("rAny").checked = Rr.tempAnyOb; $("rOk").checked = !!Rr.confirmed;
 }
 let toastT = null;
 function toast(m){ const t = $("toast"); t.textContent = m; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2600); }
@@ -1122,8 +1130,8 @@ function bind(){
   $("optBias").onchange = e => { prefs.bias = e.target.checked; savePrefs(); computeAll(); renderAll(); };
   $("wPersist").onchange = e => { prefs.wPersist = +e.target.value; savePrefs(); computeAll(); renderAll(); };
   $("wTaf").onchange = e => { prefs.wTaf = +e.target.value; savePrefs(); computeAll(); renderAll(); };
-  const rset = () => { prefs.rules = { noneWxPts:+$("rNone").value || 0, fzMissPenalty:$("rFz").checked, noCeilCode:($("rCeil").value || "999").trim().toUpperCase(), tempAnyOb:$("rAny").checked, confirmed:$("rOk").checked }; savePrefs(); computeAll(); renderAll(); };
-  ["rNone","rFz","rCeil","rAny","rOk"].forEach(id => $(id).onchange = rset);
+  const rset = () => { prefs.rules = { version:2, noneWxPts:+$("rNone").value || 0, falseAlarmPts:+$("rFa").value || 0, minWxProb:+$("rMin").value || 0, wxNoneCode:$("rWxCode").value, fzMissPenalty:$("rFz").checked, noCeilCode:$("rCeil").value.trim().toUpperCase(), tempAnyOb:$("rAny").checked, confirmed:$("rOk").checked }; S.skillKey = {}; savePrefs(); computeAll(); renderAll(); };
+  ["rNone","rFa","rMin","rWxCode","rFz","rCeil","rAny","rOk"].forEach(id => $(id).onchange = rset);
   $("outlookTxt").oninput = e => { e.target.dataset.edited = "1"; };
   $("outlookDl").onclick = () => (S.outlookSaved = true) && download(new Blob([$("outlookTxt").value], { type:"text/plain" }), `${(prefs.team || "TEAMNAME").replace(/[^A-Za-z0-9-]/g, "")}_TFC26_ETAR-OUTLOOK_03.txt`);
   $("outlookRegen").onclick = () => { delete $("outlookTxt").dataset.edited; renderOutlook(); };
