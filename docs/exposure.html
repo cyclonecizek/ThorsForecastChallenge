@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Exposure Forecast | KSC and CCSFS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF2F1; --panel:#FFFFFF; --panel-2:#F6F8F8; --ink:#13202E; --ink-2:#4B5A68; --ink-3:#7D8B97;
+  --rule:#D4DBDF; --rule-2:#E6EBED; --accent:#0B6E79; --accent-ink:#FFFFFF; --edit:#B5730C; --edit-bg:#FFF4DF;
+  --warn:#B23A2E; --warn-bg:#FBE9E6; --band:rgba(11,110,121,.13); --peak:#3359A8; --ct:#B4472A; --band-pk:rgba(51,89,168,.10); --guide:#13202E;
+  --hires:#7A4FA0; --blend:#0B6E79; --global:#3D6FB0; --ens:#8A9AA8; --mos:#B5730C;
+  --p:11,110,121; --hot:178,58,46; --cold:52,102,170;
+  --font:"Barlow", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --cond:"Barlow Condensed", "Arial Narrow", "Segoe UI", Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0D151D; --panel:#142029; --panel-2:#18252F; --ink:#E5ECF1; --ink-2:#A3B1BD; --ink-3:#73828F;
+    --rule:#283844; --rule-2:#1F2D38; --accent:#4DBFC8; --accent-ink:#06232A; --edit:#E3A53D; --edit-bg:#3A2A0E;
+    --warn:#F08070; --warn-bg:#3B1C18; --band:rgba(77,191,200,.16); --peak:#93B4F0; --ct:#F08A6A; --band-pk:rgba(147,180,240,.12); --guide:#E5ECF1;
+    --hires:#B892DA; --blend:#4DBFC8; --global:#7FA8E0; --ens:#6E7F8D; --mos:#E3A53D;
+    --p:77,191,200; --hot:240,128,112; --cold:120,160,230;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0D151D; --panel:#142029; --panel-2:#18252F; --ink:#E5ECF1; --ink-2:#A3B1BD; --ink-3:#73828F;
+  --rule:#283844; --rule-2:#1F2D38; --accent:#4DBFC8; --accent-ink:#06232A; --edit:#E3A53D; --edit-bg:#3A2A0E;
+  --warn:#F08070; --warn-bg:#3B1C18; --band:rgba(77,191,200,.16); --peak:#93B4F0; --ct:#F08A6A; --band-pk:rgba(147,180,240,.12); --guide:#E5ECF1;
+  --hires:#B892DA; --blend:#4DBFC8; --global:#7FA8E0; --ens:#6E7F8D; --mos:#E3A53D;
+  --p:77,191,200; --hot:240,128,112; --cold:120,160,230;
+  color-scheme: dark;
+}
+:root{ box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+*,*::before,*::after{ box-sizing:inherit; }
+html{ scroll-padding-top:env(safe-area-inset-top,0px); }
+body{ margin:0; background:var(--paper); color:var(--ink); font:15px/1.45 var(--font); font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased; }
+button,input,select{ font:inherit; color:inherit; }
+:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+/* ---------- top bar ---------- */
+.top{ display:grid; grid-template-columns:1fr auto; grid-template-areas:"brand actions" "sites sites"; gap:14px 28px; align-items:center; padding:18px 28px 16px; background:var(--panel); border-bottom:1px solid var(--rule); }
+.locator{ width:80px; height:118px; flex:none; }
+.locator .coast{ fill:none; stroke:var(--ink-3); stroke-width:1.2; stroke-linejoin:round; }
+.locator .water{ fill:var(--panel-2); }
+.locator .pt{ fill:var(--panel); stroke:var(--ink-2); stroke-width:1.4; cursor:pointer; transition:r .15s; }
+.locator .pt.on{ fill:var(--accent); stroke:var(--accent); }
+.locator text{ font:600 8px var(--cond); fill:var(--ink-3); }
+.brand{ grid-area:brand; display:flex; gap:16px; align-items:center; }
+.brand h1{ margin:0; font:700 26px/1 var(--cond); letter-spacing:.2px; }
+.brand .where{ margin-top:6px; color:var(--ink-2); font-size:14px; }
+.brand .where b{ color:var(--ink); font-weight:600; }
+.sites{ grid-area:sites; display:flex; flex-wrap:nowrap; gap:0; justify-self:start; margin-left:96px; border:1px solid var(--rule); border-radius:10px; overflow:hidden; background:var(--panel-2); }
+.sites button{ border:0; background:transparent; padding:8px 18px 9px; cursor:pointer; text-align:left; border-right:1px solid var(--rule); min-width:0; white-space:nowrap; }
+.sites button:last-child{ border-right:0; }
+.sites button .n{ display:block; font:600 15px/1.15 var(--cond); }
+.sites button .p{ display:block; font-size:12px; color:var(--ink-3); }
+.sites button[aria-pressed="true"]{ background:var(--accent); color:var(--accent-ink); }
+.sites button[aria-pressed="true"] .p{ color:inherit; opacity:.8; }
+.sites button .dot{ display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--edit); margin-left:6px; vertical-align:middle; visibility:hidden; }
+.sites button.dirty .dot{ visibility:visible; }
+.actions{ grid-area:actions; display:flex; gap:8px; align-items:center; }
+.btn{ border:1px solid var(--rule); background:var(--panel); border-radius:8px; padding:7px 13px; cursor:pointer; font-weight:500; white-space:nowrap; }
+.btn:hover{ border-color:var(--ink-3); }
+a.btn{ text-decoration:none; color:var(--ink); display:inline-block; }
+.btn:disabled{ opacity:.45; cursor:default; }
+.btn.primary{ background:var(--ink); color:var(--panel); border-color:var(--ink); font-weight:600; padding:8px 18px; }
+.btn.primary:hover{ opacity:.9; }
+.btn.icon{ padding:7px 10px; }
+.seg{ display:inline-flex; border:1px solid var(--rule); border-radius:8px; overflow:hidden; }
+.seg button{ border:0; background:var(--panel); padding:6px 10px; cursor:pointer; font-size:13px; }
+.seg button[aria-pressed="true"]{ background:var(--ink); color:var(--panel); }
+
+.statusline{ display:flex; flex-wrap:wrap; gap:6px 22px; align-items:center; padding:9px 28px; font-size:13px; color:var(--ink-2); border-bottom:1px solid var(--rule); background:var(--panel-2); }
+.statusline .k{ color:var(--ink-3); margin-right:5px; }
+.statusline .live::before{ content:""; display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--accent); margin-right:7px; vertical-align:1px; }
+.statusline .live.err::before{ background:var(--warn); }
+.statusline .spacer{ flex:1; }
+.statusline label{ display:inline-flex; gap:6px; align-items:center; cursor:pointer; }
+.statusline input[type=text]{ width:64px; padding:3px 7px; border:1px solid var(--rule); border-radius:6px; background:var(--panel); text-transform:uppercase; }
+.banner{ margin:14px 28px 0; padding:10px 14px; border-radius:8px; background:var(--warn-bg); color:var(--warn); font-weight:500; display:none; }
+.banner.show{ display:block; }
+.banner.demo{ background:var(--edit-bg); color:var(--edit); }
+
+main{ padding:18px 28px 40px; display:grid; gap:18px; }
+.matrix:focus{ outline:none; }
+.pagenav{ display:flex; gap:2px; padding:8px 28px 0; background:var(--panel); border-bottom:1px solid var(--rule); }
+.pagenav a{ padding:8px 16px 9px; font:600 15px var(--cond); letter-spacing:.2px; color:var(--ink-2); text-decoration:none; border-bottom:3px solid transparent; }
+.pagenav a:hover{ color:var(--ink); }
+.pagenav a[aria-current="page"]{ color:var(--accent); border-bottom-color:var(--accent); }
+.expsetup{ padding:14px 16px; display:grid; gap:12px; }
+.esrow{ display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center; font-size:13.5px; }
+.esrow label{ display:inline-flex; gap:7px; align-items:center; }
+.esrow label.grow{ flex:1 1 260px; }
+.esrow label.grow input{ flex:1; }
+.esrow input,.esrow select,.con input,.con select{ border:1px solid var(--rule); border-radius:7px; padding:5px 8px; background:var(--panel); }
+.esrow[hidden]{ display:none; }
+.esrow .tzn{ font:600 12px var(--cond); color:var(--ink-3); }
+.cons h3{ margin:0 0 6px; font:600 13px var(--cond); color:var(--ink-3); letter-spacing:.3px; }
+#expCons{ display:grid; gap:6px; margin-bottom:8px; }
+.con{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:13.5px; padding:6px 10px; border:1px solid var(--rule-2); border-radius:9px; background:var(--panel-2); }
+.con .ct{ font:700 13px var(--cond); min-width:86px; }
+.con input[type=number]{ width:72px; }
+.con label{ display:inline-flex; gap:5px; align-items:center; }
+.con .x{ margin-left:auto; border:0; background:transparent; font-size:19px; line-height:1; color:var(--ink-3); cursor:pointer; }
+.con .x:hover{ color:var(--warn); }
+.panel{ background:var(--panel); border:1px solid var(--rule); border-radius:12px; }
+
+/* ---------- graph editor ---------- */
+.editor{ padding:14px 16px 10px; }
+.params{ display:flex; flex-wrap:wrap; gap:14px 22px; }
+.pgroup{ display:flex; flex-direction:column; gap:5px; }
+.pgroup .gl{ font:600 12px var(--cond); color:var(--ink-3); letter-spacing:.3px; }
+.pgroup .chips{ display:flex; gap:4px; flex-wrap:wrap; }
+.chip{ border:1px solid var(--rule); background:var(--panel); padding:3px 9px; border-radius:6px; cursor:pointer; font-size:13px; position:relative; }
+.chip:hover{ border-color:var(--ink-3); }
+.chip[aria-pressed="true"]{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+.chip.edited::after{ content:""; position:absolute; top:-3px; right:-3px; width:7px; height:7px; border-radius:50%; background:var(--edit); border:1.5px solid var(--panel); }
+.charthead{ display:flex; align-items:flex-end; gap:16px; margin:16px 2px 4px; flex-wrap:wrap; }
+.charthead h2{ margin:0; font:700 22px/1 var(--cond); }
+.charthead .unit{ color:var(--ink-3); font-size:13px; }
+.charthead .hint{ color:var(--ink-3); font-size:13px; flex:1; min-width:220px; }
+.legend{ display:flex; gap:14px; font-size:12.5px; color:var(--ink-2); align-items:center; flex-wrap:wrap; }
+.legend i{ display:inline-block; width:18px; height:0; border-top:2px solid; vertical-align:middle; margin-right:5px; }
+.legend i.off{ border-color:var(--accent); border-top-width:3px; }
+.legend i.off.pk{ border-color:var(--peak); }
+.legend i.bar{ width:9px; height:11px; border:0; background:rgba(var(--p),.35); vertical-align:-1px; }
+.legend i.gd{ border-color:var(--guide); border-top-style:dashed; opacity:.7; }
+.legend i.src{ border-color:var(--ink-3); border-top-width:1px; }
+.legend i.bd{ border:0; height:9px; background:var(--band); }
+.chartwrap{ position:relative; }
+#chart{ display:block; width:100%; height:300px; touch-action:none; user-select:none; cursor:default; outline:none; }
+#chart:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; border-radius:6px; }
+#chart .grid{ stroke:var(--rule-2); }
+#chart .dayband{ fill:var(--panel-2); }
+#chart .axis{ font:500 11px var(--font); fill:var(--ink-3); }
+#chart .daylab{ font:600 12px var(--cond); fill:var(--ink-2); }
+#chart .thr{ stroke:var(--warn); stroke-dasharray:3 4; opacity:.55; }
+#chart .thrlab{ font:600 10.5px var(--cond); fill:var(--warn); opacity:.8; }
+#chart .band{ fill:var(--band); }
+#chart .src{ fill:none; stroke-width:1.1; opacity:.45; }
+#chart .src.hot{ opacity:1; stroke-width:2; }
+#chart .guide{ fill:none; stroke:var(--guide); stroke-width:1.4; stroke-dasharray:5 4; opacity:.65; }
+#chart .off{ fill:none; stroke:var(--accent); stroke-width:2.6; stroke-linejoin:round; }
+#chart .h{ fill:var(--panel); stroke:var(--accent); stroke-width:1.6; }
+#chart .off.pk{ stroke:var(--peak); }
+#chart .h.pk{ stroke:var(--peak); }
+#chart .h.e{ fill:var(--edit); stroke:var(--edit); }
+#chart .h.s{ fill:var(--accent); stroke:var(--panel); stroke-width:1.5; }
+#chart .h.pk.s{ fill:var(--peak); }
+#chart .selring{ fill:rgba(var(--p),.14); stroke:var(--accent); stroke-width:1.5; }
+#chart .marq{ fill:rgba(var(--p),.08); stroke:var(--accent); stroke-dasharray:4 3; }
+#chart .spanbar{ stroke:var(--accent); stroke-width:3; stroke-linecap:round; opacity:.28; }
+#chart .spanbar.pk{ stroke:var(--peak); }
+#chart .pbar{ fill:rgba(var(--p),.28); stroke:rgba(var(--p),.55); stroke-width:1; }
+#chart .pbar.e{ stroke:var(--edit); stroke-width:1.5; }
+#chart .pbar.s{ fill:rgba(var(--p),.45); }
+#chart .pstep{ stroke:var(--accent); stroke-width:3; stroke-linecap:round; }
+#chart .pstep.s2{ stroke:var(--peak); }
+#chart .pstep.s{ stroke-width:4.5; }
+#chart .gstep{ stroke:var(--guide); stroke-width:1.2; stroke-dasharray:3 3; opacity:.55; }
+#chart .h.b{ stroke-width:1.2; }
+#chart .band.pk{ fill:var(--band-pk); }
+#chart .serlab{ font:700 11px var(--cond); fill:var(--accent); }
+#chart .serlab.pk{ fill:var(--peak); }
+#chart .cursor{ stroke:var(--ink-3); stroke-dasharray:2 3; }
+#chart .nowln{ stroke:var(--accent); stroke-width:1; opacity:.5; }
+.tip{ position:absolute; pointer-events:none; background:var(--ink); color:var(--panel); border-radius:8px; padding:8px 10px; font-size:12.5px; line-height:1.4; min-width:150px; display:none; z-index:5; box-shadow:0 6px 18px rgba(0,0,0,.18); }
+.tip b{ font-weight:600; }
+.tip .r{ display:flex; justify-content:space-between; gap:14px; }
+.tip .r span:last-child{ font-weight:600; }
+.tip .mut{ opacity:.65; }
+.tools{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px; padding-top:10px; border-top:1px solid var(--rule-2); font-size:13px; color:var(--ink-2); }
+.tools .sp{ flex:1; }
+.selinfo{ font-weight:600; color:var(--accent); }
+.setv{ display:inline-flex; gap:0; }
+.setv input{ width:66px; border:1px solid var(--rule); border-right:0; border-radius:8px 0 0 8px; padding:6px 8px; background:var(--panel); }
+.setv .btn{ border-radius:0 8px 8px 0; }
+#drawWrap{ display:inline-flex; gap:8px; align-items:center; margin-right:10px; }
+#drawWrap[hidden]{ display:none; }
+.kbd{ font:600 11px var(--font); border:1px solid var(--rule); border-bottom-width:2px; border-radius:4px; padding:0 5px; color:var(--ink-2); background:var(--panel-2); }
+
+/* ---------- sources ---------- */
+details.sources{ padding:0; }
+details.sources > summary{ list-style:none; cursor:pointer; padding:12px 16px; display:flex; gap:12px; align-items:center; font-weight:600; }
+details.sources > summary::-webkit-details-marker{ display:none; }
+details.sources > summary .chev{ transition:transform .15s; color:var(--ink-3); }
+details.sources[open] > summary .chev{ transform:rotate(90deg); }
+details.sources > summary .sum{ font-weight:400; color:var(--ink-2); font-size:13.5px; }
+.srcgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px 26px; padding:4px 16px 16px; }
+.srcfam h3{ margin:0 0 6px; font:600 13px var(--cond); color:var(--ink-3); letter-spacing:.3px; display:flex; align-items:center; gap:7px; }
+.srcfam h3 i{ width:10px; height:3px; border-radius:2px; display:inline-block; }
+.srow{ display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:center; padding:3px 0; font-size:13.5px; }
+.srow .st{ font-size:12px; color:var(--ink-3); }
+.srow.na{ color:var(--ink-3); }
+.srow select{ border:1px solid var(--rule); border-radius:5px; background:var(--panel); padding:1px 2px; font-size:12px; }
+.srcfoot{ padding:0 16px 14px; font-size:12.5px; color:var(--ink-3); display:flex; gap:18px; flex-wrap:wrap; align-items:center; }
+.srcfoot label{ display:inline-flex; gap:6px; align-items:center; cursor:pointer; color:var(--ink-2); }
+.limits{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.limits input{ width:52px; border:1px solid var(--rule); border-radius:5px; padding:2px 5px; background:var(--panel); }
+
+/* ---------- matrix ---------- */
+.matrix{ overflow:auto; max-height:calc(100vh - 120px); border-radius:12px; }
+table.mx{ border-collapse:separate; border-spacing:0; width:max-content; min-width:100%; font-size:13.5px; }
+.mx th,.mx td{ border-right:1px solid var(--rule-2); border-bottom:1px solid var(--rule-2); padding:0; text-align:center; white-space:nowrap; }
+.mx thead th{ position:sticky; background:var(--panel); z-index:3; font-weight:600; }
+.mx thead tr.g th{ top:0; height:30px; font:700 13.5px var(--cond); letter-spacing:.2px; border-bottom:1px solid var(--rule); color:var(--ink); padding:0 8px; }
+.mx thead tr.c th{ top:30px; height:44px; font:600 12.5px/1.15 var(--cond); color:var(--ink-2); border-bottom:2px solid var(--ink); padding:4px 6px; cursor:pointer; min-width:46px; white-space:normal; }
+.mx thead tr.c th:hover{ color:var(--ink); }
+.mx thead tr.c th.sel{ color:var(--accent); box-shadow:inset 0 -3px 0 var(--accent); }
+.mx thead tr.c th small{ display:block; font-weight:500; color:var(--ink-3); font-size:11px; }
+.mx .gstart{ border-left:1px solid var(--rule); }
+.mx .stick{ position:sticky; left:0; z-index:2; background:var(--panel); text-align:left; }
+.mx .stick2{ position:sticky; left:84px; z-index:2; background:var(--panel); border-right:1px solid var(--rule); }
+.mx thead .stick,.mx thead .stick2{ z-index:4; }
+.mx td.day{ width:84px; min-width:84px; padding:0 10px; font:600 13px/1.2 var(--cond); color:var(--ink-2); vertical-align:top; padding-top:6px; }
+.mx td.day b{ display:block; color:var(--ink); font-size:15px; }
+.mx td.tm{ min-width:92px; padding:0 10px; font-weight:600; text-align:left; color:var(--ink); }
+.mx td.tm small{ color:var(--ink-3); font-weight:500; margin-left:4px; }
+.mx tr.dstart td{ border-top:2px solid var(--ink-3); }
+.mx tr.sect td.tm{ box-shadow:inset 3px 0 0 var(--rule); }
+.mx td.c{ height:30px; min-width:46px; cursor:cell; position:relative; padding:0 6px; }
+.mx td.c.na{ color:var(--ink-3); cursor:default; }
+.mx td.c.lo{ color:var(--ink-3); }
+.mx.across td.c.span{ box-shadow:inset 0 -2px 0 rgba(var(--p),.35); }
+.mx td.c[rowspan]{ box-shadow:inset 3px 0 0 rgba(var(--p),.35); }
+.mx td.c.ed{ font-weight:700; }
+.mx td.c.ed::after{ content:""; position:absolute; top:0; right:0; border-style:solid; border-width:0 7px 7px 0; border-color:transparent var(--edit) transparent transparent; }
+.mx td.c.bad{ box-shadow:inset 0 -2px 0 var(--warn); color:var(--warn); }
+.mx td.c.cur{ outline:2px solid var(--accent); outline-offset:-2px; z-index:1; }
+.mx tr.hov td, .mx td.hov, .mx th.hov{ box-shadow:inset 0 0 0 999px rgba(var(--p),.08); }
+.mx th.hov{ color:var(--accent); }
+/* time across */
+.mx.across thead tr.g th{ text-align:left; padding-left:8px; }
+.mx.across thead tr.g th.stick{ text-align:left; color:var(--ink-3); font-weight:600; }
+.mx.across thead tr.c th.tcol{ min-width:44px; padding:4px 3px; font:600 12.5px/1.1 var(--cond); color:var(--ink-2); cursor:default; }
+.mx.across thead tr.c th.tcol small{ font-size:10.5px; }
+.mx.across .dcol{ border-left:2px solid var(--ink-3); }
+.mx.across th.grp{ width:118px; min-width:118px; max-width:118px; white-space:normal; text-align:left; vertical-align:top; padding:6px 10px; font:700 12.5px/1.2 var(--cond); color:var(--ink); background:var(--panel-2); border-right:1px solid var(--rule); }
+.mx.across th.plab{ left:118px; min-width:104px; text-align:left; padding:0 10px; font:600 13px/1.15 var(--cond); color:var(--ink-2); cursor:pointer; white-space:nowrap; }
+.mx.across th.plab small{ font-weight:500; color:var(--ink-3); font-size:11px; }
+.mx.across th.plab.sel{ color:var(--accent); box-shadow:inset -3px 0 0 var(--accent); }
+.mx.across tr.gfirst > *{ border-top:2px solid var(--rule); }
+.mx.across thead tr.c th{ border-bottom:2px solid var(--ink); }
+.mx.across td.c{ min-width:44px; padding:0 3px; }
+.mx td.c input,.mx td.c select{ position:absolute; inset:0; width:100%; height:100%; border:0; text-align:center; background:var(--panel); font-weight:700; outline:2px solid var(--edit); outline-offset:-2px; padding:0 2px; }
+.mx td.sev{ min-width:84px; }
+.foot{ color:var(--ink-3); font-size:12.5px; max-width:100ch; padding:0 2px; }
+.foot p{ margin:4px 0; }
+
+/* ---------- dialog / toast ---------- */
+dialog{ border:1px solid var(--rule); border-radius:14px; padding:0; width:min(520px,92vw); background:var(--panel); color:var(--ink); box-shadow:0 24px 60px rgba(0,0,0,.25); }
+dialog::backdrop{ background:rgba(13,21,29,.45); }
+.dlg{ padding:22px 24px 20px; }
+.dlg h2{ margin:0 0 4px; font:700 24px/1.1 var(--cond); }
+.dlg p.sub{ margin:0 0 16px; color:var(--ink-2); font-size:14px; }
+.dlg fieldset{ border:0; padding:0; margin:0 0 14px; }
+.dlg legend{ font:600 13px var(--cond); color:var(--ink-3); margin-bottom:6px; letter-spacing:.3px; }
+.dlg .opts{ display:flex; flex-wrap:wrap; gap:6px 16px; }
+.dlg .opts label{ display:inline-flex; gap:7px; align-items:center; cursor:pointer; }
+.dlg .qc{ background:var(--warn-bg); color:var(--warn); border-radius:8px; padding:9px 12px; font-size:13.5px; margin-bottom:14px; display:none; max-height:130px; overflow:auto; }
+.dlg .qc.show{ display:block; }
+.dlg .qc ul{ margin:4px 0 0; padding-left:18px; }
+.dlg .row{ display:flex; gap:10px; justify-content:flex-end; margin-top:6px; }
+.dlg input[type=text]{ padding:6px 9px; border:1px solid var(--rule); border-radius:7px; background:var(--panel); width:90px; text-transform:uppercase; }
+.toast{ position:fixed; left:50%; bottom:calc(22px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%) translateY(20px); background:var(--ink); color:var(--panel); padding:10px 18px; border-radius:10px; font-weight:500; opacity:0; transition:all .2s; pointer-events:none; z-index:50; }
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+@media (max-width:860px){
+  .top{ grid-template-columns:1fr; grid-template-areas:"brand" "actions" "sites"; }
+  .sites{ flex-wrap:wrap; margin-left:0; }
+}
+@media (max-width:640px){
+  .top,.statusline,main{ padding-left:14px; padding-right:14px; }
+  .banner{ margin-left:14px; margin-right:14px; }
+  .sites button{ min-width:0; flex:1 1 30%; }
+  .locator{ display:none; }
+}
+@media (prefers-reduced-motion:reduce){ *{ transition:none !important; } }
+@media print{
+  .top .actions,.statusline,.editor,details.sources,.banner{ display:none !important; }
+  .matrix{ max-height:none; overflow:visible; }
+  body{ background:#fff; }
+}
+</style>
+</head>
+<body>
+<nav class="pagenav" aria-label="Products"><a href="./" data-page="planning">Planning forecast</a><a href="exposure.html" data-page="exposure">Exposure forecasts</a><a href="taf.html" data-page="taf">KCOF TAF</a></nav>
+<header class="top">
+  <div class="brand">
+    <svg class="locator" id="locator" viewBox="0 0 80 118" aria-label="Forecast point locator"></svg>
+    <div>
+      <h1 id="pageTitle">Daily planning forecast</h1>
+      <div class="where" id="where"></div>
+    </div>
+  </div>
+  <nav class="sites" id="sites" aria-label="Forecast point"></nav>
+  <div class="actions">
+    <button class="btn icon" id="undo" title="Undo (Ctrl+Z)" aria-label="Undo" disabled>&#8630;</button>
+    <button class="btn icon" id="redo" title="Redo (Ctrl+Shift+Z)" aria-label="Redo" disabled>&#8631;</button>
+    <button class="btn" id="resetSite" title="Clear every edit for this point">Reset to guidance</button>
+    <button class="btn primary" id="publish">Save and publish</button>
+  </div>
+</header>
+<div class="statusline">
+  <span class="live" id="live">Loading guidance</span>
+  <span><span class="k">Last published</span><span id="lastPub">not yet</span></span>
+  <span><span class="k">Edits</span><span id="editCount">0</span></span>
+  <span class="spacer"></span>
+  <span class="seg" role="group" aria-label="Matrix layout"><button id="orD" aria-pressed="false" title="Time runs down the rows">Time down</button><button id="orA" aria-pressed="true" title="Time runs across the columns">Time across</button></span>
+  <span class="seg" id="wuSel" role="group" aria-label="Wind units"><button type="button" data-u="kt">kt</button><button type="button" data-u="mph">mph</button><button type="button" data-u="m/s">m/s</button><button type="button" data-u="ft/s">ft/s</button></span>
+  <span class="seg" role="group" aria-label="Time zone"><button id="tzL" aria-pressed="true">Local</button><button id="tzZ" aria-pressed="false">Zulu</button></span>
+  <button class="btn" id="refresh" style="padding:4px 10px;font-size:13px">Refresh guidance</button>
+  <label>Forecaster <input type="text" id="initials" maxlength="5" placeholder="Init" autocomplete="off"></label>
+</div>
+<div class="banner" id="banner"></div>
+
+<main>
+  <section class="panel expsetup" id="expSetup" hidden aria-label="Operation setup">
+    <div class="esrow">
+      <label class="grow">Operation <input id="expOp" placeholder="e.g. Crane lift, vehicle rollout, propellant load" autocomplete="off"></label>
+      <label>Start <input type="datetime-local" id="expStart"></label>
+      <label>End <input type="datetime-local" id="expEnd"></label>
+      <span class="tzn" id="expTz"></span>
+      <span class="seg" id="expQuick" role="group" aria-label="Quick range"><button type="button" data-q="12">12 h</button><button type="button" data-q="24">24 h</button><button type="button" data-q="48">48 h</button><button type="button" data-q="72">3 days</button><button type="button" data-q="168">7 days</button></span>
+      <label>Hourly for the first <select id="expHourly"><option value="6">6 h</option><option value="12">12 h</option><option value="24">24 h</option><option value="36">36 h</option><option value="48">48 h</option><option value="72">72 h</option><option value="all">whole window</option></select>, then 3-hourly</label>
+      <span class="mut" id="expLen"></span>
+    </div>
+    <div class="esrow" id="expCustom" hidden>
+      <strong>Custom point</strong>
+      <label>Name <input id="cuName" maxlength="24" autocomplete="off"></label>
+      <label>Latitude <input id="cuLat" inputmode="decimal" style="width:100px"></label>
+      <label>Longitude <input id="cuLon" inputmode="decimal" style="width:100px"></label>
+      <button class="btn" type="button" id="cuLoad">Load point</button>
+    </div>
+    <div class="cons">
+      <h3>Constraints</h3>
+      <div id="expCons"></div>
+      <div class="actions"><button class="btn" type="button" id="addWind">+ Wind constraint</button><button class="btn" type="button" id="addTemp">+ Temperature constraint</button></div>
+    </div>
+  </section>
+  <section class="panel editor" aria-label="Graph editor">
+    <div class="params" id="params"></div>
+    <div class="charthead">
+      <h2 id="ptitle">Temperature</h2><span class="unit" id="punit"></span>
+      <span class="hint" id="phint">Drag across the graph to draw the forecast. Hold Alt while dragging to erase back to guidance. Double-click a point to reset it.</span>
+<div class="legend" id="legend"></div>
+    </div>
+    <div class="chartwrap" id="chartwrap">
+      <svg id="chart" tabindex="0" role="application" aria-label="Forecast graph editor. Select points, then use the up and down arrow keys to move them."></svg>
+      <div class="tip" id="tip"></div>
+    </div>
+    <div class="tools">
+      <span class="seg" id="modeSel" role="group" aria-label="Editing mode"><button type="button" data-m="select" title="Select points, then drag or nudge them">Select and drag</button><button type="button" data-m="draw" title="Paint the line by dragging across the graph">Draw</button></span>
+      <span id="drawWrap" hidden>Line <span class="seg" id="drawSel" role="group" aria-label="Line to draw"></span></span>
+      <span class="selinfo" id="selinfo"></span>
+      <span class="sp"></span>
+      <button class="btn" id="nudgeDn">Lower all</button>
+      <button class="btn" id="nudgeUp">Raise all</button>
+      <span class="setv"><input id="setVal" inputmode="decimal" placeholder="Value" aria-label="Value to set"><button class="btn" id="setGo">Set all</button></span>
+      <button class="btn" id="smooth">Smooth</button>
+      <button class="btn" id="resetParam">Reset parameter to guidance</button>
+    </div>
+  </section>
+
+  <details class="panel sources" id="sourcesPanel">
+    <summary><span class="chev">&#9656;</span>Guidance sources <span class="sum" id="srcSum"></span></summary>
+    <div class="srcgrid" id="srcgrid"></div>
+    <div class="srcfoot">
+      <label><input type="checkbox" id="linkProbs" checked> Shift exceedance probabilities with my wind and temperature edits</label>
+      <label><input type="checkbox" id="linkWin" checked> Link 1, 3 and 6 hr precipitation and lightning probabilities</label>
+      <label><input type="checkbox" id="clampProbs" checked> Cap guidance probabilities at 99% (1% rounds down to 0)</label>
+      <span class="limits plan-only">Hot threshold (°F) <input type="number" id="hotThr" step="1"></span>
+    </div>
+  </details>
+
+  <section class="panel matrix" id="matrix" aria-label="Forecast matrix" tabindex="-1"></section>
+
+  <div class="foot">
+    <p id="foot1">Hourly for the first 24 hours, then 3-hour blocks through day 5 and 6-hour blocks on days 6 and 7. In blocks, temperature shows the warmest value for daytime blocks and the coolest for overnight blocks, winds show the block maximum, and probabilities are the chance of the event at any time in the block. 3 hr and 6 hr probability cells are merged across the hours they cover (hover a cell to see the exact period). With linking on, the 3 and 6 hr values are built from the 1 hr (or 3-hour block) values inside them, using how the guidance itself combines hours for that period; edit a 3 or 6 hr value and the hours inside it scale together to match. In 3- and 6-hour blocks, the 1 hr cells show the highest 1-hour chance inside the block, and in 6-hour blocks the 3 hr cells show the highest 3-hour chance. Guidance probabilities are whole percents, with 1% rounded down to 0. In the table, press Enter to edit a cell, Delete to return it to guidance, and paste a row or column straight from Excel.</p>
+    <p>Winds at 54 ft and 200 ft are interpolated from each model's 10 m and 80 m winds (power law where 80 m is missing). Peaks scale the 10 m gust factor with height. WBGT is estimated from temperature, humidity, wind and sunshine. Lightning comes only from guidance with explicit thunder probabilities: SPC calibrated thunder from the HREF and REFS (weighted double by default), LAMP, MOS and NBM text. RRFS and the REFS members come from the high-res workflow.</p>
+  </div>
+</main>
+
+<dialog id="pubDlg">
+  <form method="dialog" class="dlg" id="pubForm">
+    <h2>Save and publish</h2>
+    <p class="sub">Downloads the official forecast. Points you haven't edited go out as guidance. The PDF and HTML show the table with time across, one page per few days.</p>
+    <fieldset><legend>Forecast points</legend><div class="opts" id="pubSites"></div></fieldset>
+    <fieldset><legend>Files</legend><div class="opts">
+      <label><input type="checkbox" id="fmtX" checked> Excel workbook</label>
+      <label><input type="checkbox" id="fmtC" checked> CSV</label>
+      <label><input type="checkbox" id="fmtP" checked> PDF</label>
+      <label><input type="checkbox" id="fmtH" checked> HTML page</label>
+    </div></fieldset>
+    <fieldset><legend>Forecaster</legend><input type="text" id="pubInit" maxlength="5" placeholder="Init" required></fieldset>
+    <div class="qc" id="qc"></div>
+    <div class="row"><button class="btn" value="cancel" formnovalidate>Cancel</button><button class="btn primary" id="pubGo" value="ok">Publish</button></div>
+  </form>
+</dialog>
+<div class="toast" id="toast"></div>
+<script>window.PAGE = "exposure";</script>
+<script src="guidance.js"></script>
+<script src="planning-app.js"></script>
+</body>
+</html>
