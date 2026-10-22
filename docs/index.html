@@ -3,408 +3,1150 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Daily Planning Forecast | KSC, CCSFS, Patrick SFB</title>
+<title>Thor's Forecast Challenge 2026 | Forecast workbench</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#EEF2F1; --panel:#FFFFFF; --panel-2:#F6F8F8; --ink:#13202E; --ink-2:#4B5A68; --ink-3:#7D8B97;
-  --rule:#D4DBDF; --rule-2:#E6EBED; --accent:#0B6E79; --accent-ink:#FFFFFF; --edit:#B5730C; --edit-bg:#FFF4DF;
-  --warn:#B23A2E; --warn-bg:#FBE9E6; --band:rgba(11,110,121,.13); --peak:#3359A8; --ct:#B4472A; --band-pk:rgba(51,89,168,.10); --guide:#13202E;
-  --hires:#7A4FA0; --blend:#0B6E79; --global:#3D6FB0; --ens:#8A9AA8; --mos:#B5730C;
-  --p:11,110,121; --hot:178,58,46; --cold:52,102,170;
-  --font:"Barlow", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  --cond:"Barlow Condensed", "Arial Narrow", "Segoe UI", Arial, sans-serif;
+  --paper:#EDF0F2; --panel:#FFFFFF; --panel-2:#F5F7F8; --ink:#141C26; --ink-2:#4A5767; --ink-3:#7E8A97;
+  --rule:#D3DAE0; --rule-2:#E5EAEE; --accent:#2D5D8C; --accent-ink:#FFFFFF; --steel:#1B2633; --steel-ink:#E8EEF4;
+  --gold:#B5862B; --edit:#B5730C; --edit-bg:#FFF4DF; --warn:#B23A2E; --warn-bg:#FBE9E6; --ok:#2F7A4A; --ok-bg:#E6F3EA;
+  --hi:rgba(47,122,74,.16); --mid:rgba(181,134,43,.16); --lo:rgba(178,58,46,.13);
+  --font:"Barlow","Segoe UI","Helvetica Neue",Arial,sans-serif; --cond:"Barlow Condensed","Arial Narrow","Segoe UI",Arial,sans-serif; --mono:"IBM Plex Mono",Consolas,"Liberation Mono",monospace;
   color-scheme: light;
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --paper:#0D151D; --panel:#142029; --panel-2:#18252F; --ink:#E5ECF1; --ink-2:#A3B1BD; --ink-3:#73828F;
-    --rule:#283844; --rule-2:#1F2D38; --accent:#4DBFC8; --accent-ink:#06232A; --edit:#E3A53D; --edit-bg:#3A2A0E;
-    --warn:#F08070; --warn-bg:#3B1C18; --band:rgba(77,191,200,.16); --peak:#93B4F0; --ct:#F08A6A; --band-pk:rgba(147,180,240,.12); --guide:#E5ECF1;
-    --hires:#B892DA; --blend:#4DBFC8; --global:#7FA8E0; --ens:#6E7F8D; --mos:#E3A53D;
-    --p:77,191,200; --hot:240,128,112; --cold:120,160,230;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"]{
-  --paper:#0D151D; --panel:#142029; --panel-2:#18252F; --ink:#E5ECF1; --ink-2:#A3B1BD; --ink-3:#73828F;
-  --rule:#283844; --rule-2:#1F2D38; --accent:#4DBFC8; --accent-ink:#06232A; --edit:#E3A53D; --edit-bg:#3A2A0E;
-  --warn:#F08070; --warn-bg:#3B1C18; --band:rgba(77,191,200,.16); --peak:#93B4F0; --ct:#F08A6A; --band-pk:rgba(147,180,240,.12); --guide:#E5ECF1;
-  --hires:#B892DA; --blend:#4DBFC8; --global:#7FA8E0; --ens:#6E7F8D; --mos:#E3A53D;
-  --p:77,191,200; --hot:240,128,112; --cold:120,160,230;
-  color-scheme: dark;
-}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#0E141B; --panel:#151E28; --panel-2:#19232F; --ink:#E4EAF0; --ink-2:#A3B0BD; --ink-3:#738190; --rule:#283442; --rule-2:#1F2A36;
+  --accent:#7FB2E5; --accent-ink:#0B1A28; --steel:#0A1017; --steel-ink:#E4EAF0; --gold:#E2B456; --edit:#E3A53D; --edit-bg:#3A2A0E; --warn:#F08070; --warn-bg:#3B1C18; --ok:#6CC08A; --ok-bg:#16301F;
+  --hi:rgba(108,192,138,.18); --mid:rgba(226,180,86,.16); --lo:rgba(240,128,112,.14); color-scheme: dark; } }
 :root{ box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
 *,*::before,*::after{ box-sizing:inherit; }
-html{ scroll-padding-top:env(safe-area-inset-top,0px); }
 body{ margin:0; background:var(--paper); color:var(--ink); font:15px/1.45 var(--font); font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased; }
-button,input,select{ font:inherit; color:inherit; }
+button,input,select,textarea{ font:inherit; color:inherit; }
 :focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
-
-/* ---------- top bar ---------- */
-.top{ display:grid; grid-template-columns:1fr auto; grid-template-areas:"brand actions" "sites sites"; gap:14px 28px; align-items:center; padding:18px 28px 16px; background:var(--panel); border-bottom:1px solid var(--rule); }
-.locator{ width:80px; height:118px; flex:none; }
-.locator .coast{ fill:none; stroke:var(--ink-3); stroke-width:1.2; stroke-linejoin:round; }
-.locator .water{ fill:var(--panel-2); }
-.locator .pt{ fill:var(--panel); stroke:var(--ink-2); stroke-width:1.4; cursor:pointer; transition:r .15s; }
-.locator .pt.on{ fill:var(--accent); stroke:var(--accent); }
-.locator text{ font:600 8px var(--cond); fill:var(--ink-3); }
-.brand{ grid-area:brand; display:flex; gap:16px; align-items:center; }
-.brand h1{ margin:0; font:700 26px/1 var(--cond); letter-spacing:.2px; }
-.brand .where{ margin-top:6px; color:var(--ink-2); font-size:14px; }
-.brand .where b{ color:var(--ink); font-weight:600; }
-.sites{ grid-area:sites; display:flex; flex-wrap:nowrap; gap:0; justify-self:start; margin-left:96px; border:1px solid var(--rule); border-radius:10px; overflow:hidden; background:var(--panel-2); }
-.sites button{ border:0; background:transparent; padding:8px 18px 9px; cursor:pointer; text-align:left; border-right:1px solid var(--rule); min-width:0; white-space:nowrap; }
-.sites button:last-child{ border-right:0; }
-.sites button .n{ display:block; font:600 15px/1.15 var(--cond); }
-.sites button .p{ display:block; font-size:12px; color:var(--ink-3); }
-.sites button[aria-pressed="true"]{ background:var(--accent); color:var(--accent-ink); }
-.sites button[aria-pressed="true"] .p{ color:inherit; opacity:.8; }
-.sites button .dot{ display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--edit); margin-left:6px; vertical-align:middle; visibility:hidden; }
-.sites button.dirty .dot{ visibility:visible; }
-.actions{ grid-area:actions; display:flex; gap:8px; align-items:center; }
+.top{ background:var(--steel); color:var(--steel-ink); padding:16px 28px 14px; display:grid; grid-template-columns:1fr auto; gap:12px 24px; align-items:center; }
+.top h1{ margin:0; font:700 26px/1 var(--cond); letter-spacing:.3px; }
+.top h1 span{ color:var(--gold); }
+.top .sub{ font-size:13.5px; opacity:.8; margin-top:4px; }
+.top .ctl{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+.top select,.top input{ background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.22); border-radius:8px; padding:7px 10px; color:var(--steel-ink); }
+.top select option{ color:#141C26; }
+.top input#team{ width:150px; text-transform:uppercase; }
+.custom{ grid-column:1 / -1; display:flex; gap:10px; align-items:center; font-size:13.5px; flex-wrap:wrap; }
+.custom input{ width:180px; }
+.custom[hidden]{ display:none; }
 .btn{ border:1px solid var(--rule); background:var(--panel); border-radius:8px; padding:7px 13px; cursor:pointer; font-weight:500; white-space:nowrap; }
 .btn:hover{ border-color:var(--ink-3); }
-a.btn{ text-decoration:none; color:var(--ink); display:inline-block; }
-.btn:disabled{ opacity:.45; cursor:default; }
-.btn.primary{ background:var(--ink); color:var(--panel); border-color:var(--ink); font-weight:600; padding:8px 18px; }
-.btn.primary:hover{ opacity:.9; }
-.btn.icon{ padding:7px 10px; }
-.seg{ display:inline-flex; border:1px solid var(--rule); border-radius:8px; overflow:hidden; }
-.seg button{ border:0; background:var(--panel); padding:6px 10px; cursor:pointer; font-size:13px; }
-.seg button[aria-pressed="true"]{ background:var(--ink); color:var(--panel); }
-
-.statusline{ display:flex; flex-wrap:wrap; gap:6px 22px; align-items:center; padding:9px 28px; font-size:13px; color:var(--ink-2); border-bottom:1px solid var(--rule); background:var(--panel-2); }
-.statusline .k{ color:var(--ink-3); margin-right:5px; }
-.statusline .live::before{ content:""; display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--accent); margin-right:7px; vertical-align:1px; }
-.statusline .live.err::before{ background:var(--warn); }
-.statusline .spacer{ flex:1; }
-.statusline label{ display:inline-flex; gap:6px; align-items:center; cursor:pointer; }
-.statusline input[type=text]{ width:64px; padding:3px 7px; border:1px solid var(--rule); border-radius:6px; background:var(--panel); text-transform:uppercase; }
-.banner{ margin:14px 28px 0; padding:10px 14px; border-radius:8px; background:var(--warn-bg); color:var(--warn); font-weight:500; display:none; }
-.banner.show{ display:block; }
-.banner.demo{ background:var(--edit-bg); color:var(--edit); }
-
-main{ padding:18px 28px 40px; display:grid; gap:18px; }
-.matrix:focus{ outline:none; }
-.pagenav{ display:flex; gap:2px; padding:8px 28px 0; background:var(--panel); border-bottom:1px solid var(--rule); }
-.pagenav a{ padding:8px 16px 9px; font:600 15px var(--cond); letter-spacing:.2px; color:var(--ink-2); text-decoration:none; border-bottom:3px solid transparent; }
-.pagenav a:hover{ color:var(--ink); }
-.pagenav a[aria-current="page"]{ color:var(--accent); border-bottom-color:var(--accent); }
-.expsetup{ padding:14px 16px; display:grid; gap:12px; }
-.esrow{ display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center; font-size:13.5px; }
-.esrow label{ display:inline-flex; gap:7px; align-items:center; }
-.esrow label.grow{ flex:1 1 260px; }
-.esrow label.grow input{ flex:1; }
-.esrow input,.esrow select,.con input,.con select{ border:1px solid var(--rule); border-radius:7px; padding:5px 8px; background:var(--panel); }
-.esrow[hidden]{ display:none; }
-.esrow .tzn{ font:600 12px var(--cond); color:var(--ink-3); }
-.cons h3{ margin:0 0 6px; font:600 13px var(--cond); color:var(--ink-3); letter-spacing:.3px; }
-#expCons{ display:grid; gap:6px; margin-bottom:8px; }
-.con{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:13.5px; padding:6px 10px; border:1px solid var(--rule-2); border-radius:9px; background:var(--panel-2); }
-.con .ct{ font:700 13px var(--cond); min-width:86px; }
-.con input[type=number]{ width:72px; }
-.con label{ display:inline-flex; gap:5px; align-items:center; }
-.con .x{ margin-left:auto; border:0; background:transparent; font-size:19px; line-height:1; color:var(--ink-3); cursor:pointer; }
-.con .x:hover{ color:var(--warn); }
-.panel{ background:var(--panel); border:1px solid var(--rule); border-radius:12px; }
-
-/* ---------- graph editor ---------- */
-.editor{ padding:14px 16px 10px; }
-.params{ display:flex; flex-wrap:wrap; gap:14px 22px; }
-.pgroup{ display:flex; flex-direction:column; gap:5px; }
-.pgroup .gl{ font:600 12px var(--cond); color:var(--ink-3); letter-spacing:.3px; }
-.pgroup .chips{ display:flex; gap:4px; flex-wrap:wrap; }
-.chip{ border:1px solid var(--rule); background:var(--panel); padding:3px 9px; border-radius:6px; cursor:pointer; font-size:13px; position:relative; }
-.chip:hover{ border-color:var(--ink-3); }
-.chip[aria-pressed="true"]{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
-.chip.edited::after{ content:""; position:absolute; top:-3px; right:-3px; width:7px; height:7px; border-radius:50%; background:var(--edit); border:1.5px solid var(--panel); }
-.charthead{ display:flex; align-items:flex-end; gap:16px; margin:16px 2px 4px; flex-wrap:wrap; }
-.charthead h2{ margin:0; font:700 22px/1 var(--cond); }
-.charthead .unit{ color:var(--ink-3); font-size:13px; }
-.charthead .hint{ color:var(--ink-3); font-size:13px; flex:1; min-width:220px; }
-.legend{ display:flex; gap:14px; font-size:12.5px; color:var(--ink-2); align-items:center; flex-wrap:wrap; }
-.legend i{ display:inline-block; width:18px; height:0; border-top:2px solid; vertical-align:middle; margin-right:5px; }
-.legend i.off{ border-color:var(--accent); border-top-width:3px; }
-.legend i.off.pk{ border-color:var(--peak); }
-.legend i.bar{ width:9px; height:11px; border:0; background:rgba(var(--p),.35); vertical-align:-1px; }
-.legend i.gd{ border-color:var(--guide); border-top-style:dashed; opacity:.7; }
-.legend i.src{ border-color:var(--ink-3); border-top-width:1px; }
-.legend i.bd{ border:0; height:9px; background:var(--band); }
-.chartwrap{ position:relative; }
-#chart{ display:block; width:100%; height:300px; touch-action:none; user-select:none; cursor:default; outline:none; }
-#chart:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; border-radius:6px; }
-#chart .grid{ stroke:var(--rule-2); }
-#chart .dayband{ fill:var(--panel-2); }
-#chart .axis{ font:500 11px var(--font); fill:var(--ink-3); }
-#chart .daylab{ font:600 12px var(--cond); fill:var(--ink-2); }
-#chart .thr{ stroke:var(--warn); stroke-dasharray:3 4; opacity:.55; }
-#chart .thrlab{ font:600 10.5px var(--cond); fill:var(--warn); opacity:.8; }
-#chart .band{ fill:var(--band); }
-#chart .src{ fill:none; stroke-width:1.1; opacity:.45; }
-#chart .src.hot{ opacity:1; stroke-width:2; }
-#chart .guide{ fill:none; stroke:var(--guide); stroke-width:1.4; stroke-dasharray:5 4; opacity:.65; }
-#chart .off{ fill:none; stroke:var(--accent); stroke-width:2.6; stroke-linejoin:round; }
-#chart .h{ fill:var(--panel); stroke:var(--accent); stroke-width:1.6; }
-#chart .off.pk{ stroke:var(--peak); }
-#chart .h.pk{ stroke:var(--peak); }
-#chart .h.e{ fill:var(--edit); stroke:var(--edit); }
-#chart .h.s{ fill:var(--accent); stroke:var(--panel); stroke-width:1.5; }
-#chart .h.pk.s{ fill:var(--peak); }
-#chart .selring{ fill:rgba(var(--p),.14); stroke:var(--accent); stroke-width:1.5; }
-#chart .marq{ fill:rgba(var(--p),.08); stroke:var(--accent); stroke-dasharray:4 3; }
-#chart .spanbar{ stroke:var(--accent); stroke-width:3; stroke-linecap:round; opacity:.28; }
-#chart .spanbar.pk{ stroke:var(--peak); }
-#chart .pbar{ fill:rgba(var(--p),.28); stroke:rgba(var(--p),.55); stroke-width:1; }
-#chart .pbar.e{ stroke:var(--edit); stroke-width:1.5; }
-#chart .pbar.s{ fill:rgba(var(--p),.45); }
-#chart .pstep{ stroke:var(--accent); stroke-width:3; stroke-linecap:round; }
-#chart .pstep.s2{ stroke:var(--peak); }
-#chart .pstep.s{ stroke-width:4.5; }
-#chart .gstep{ stroke:var(--guide); stroke-width:1.2; stroke-dasharray:3 3; opacity:.55; }
-#chart .h.b{ stroke-width:1.2; }
-#chart .band.pk{ fill:var(--band-pk); }
-#chart .serlab{ font:700 11px var(--cond); fill:var(--accent); }
-#chart .serlab.pk{ fill:var(--peak); }
-#chart .cursor{ stroke:var(--ink-3); stroke-dasharray:2 3; }
-#chart .nowln{ stroke:var(--accent); stroke-width:1; opacity:.5; }
-.tip{ position:absolute; pointer-events:none; background:var(--ink); color:var(--panel); border-radius:8px; padding:8px 10px; font-size:12.5px; line-height:1.4; min-width:150px; display:none; z-index:5; box-shadow:0 6px 18px rgba(0,0,0,.18); }
-.tip b{ font-weight:600; }
-.tip .r{ display:flex; justify-content:space-between; gap:14px; }
-.tip .r span:last-child{ font-weight:600; }
-.tip .mut{ opacity:.65; }
-.tools{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px; padding-top:10px; border-top:1px solid var(--rule-2); font-size:13px; color:var(--ink-2); }
-.tools .sp{ flex:1; }
-.selinfo{ font-weight:600; color:var(--accent); }
-.setv{ display:inline-flex; gap:0; }
-.setv input{ width:66px; border:1px solid var(--rule); border-right:0; border-radius:8px 0 0 8px; padding:6px 8px; background:var(--panel); }
-.setv .btn{ border-radius:0 8px 8px 0; }
-#drawWrap{ display:inline-flex; gap:8px; align-items:center; margin-right:10px; }
-#drawWrap[hidden]{ display:none; }
-.kbd{ font:600 11px var(--font); border:1px solid var(--rule); border-bottom-width:2px; border-radius:4px; padding:0 5px; color:var(--ink-2); background:var(--panel-2); }
-
-/* ---------- sources ---------- */
-details.sources{ padding:0; }
-details.sources > summary{ list-style:none; cursor:pointer; padding:12px 16px; display:flex; gap:12px; align-items:center; font-weight:600; }
-details.sources > summary::-webkit-details-marker{ display:none; }
-details.sources > summary .chev{ transition:transform .15s; color:var(--ink-3); }
-details.sources[open] > summary .chev{ transform:rotate(90deg); }
-details.sources > summary .sum{ font-weight:400; color:var(--ink-2); font-size:13.5px; }
-.srcgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px 26px; padding:4px 16px 16px; }
-.srcfam h3{ margin:0 0 6px; font:600 13px var(--cond); color:var(--ink-3); letter-spacing:.3px; display:flex; align-items:center; gap:7px; }
-.srcfam h3 i{ width:10px; height:3px; border-radius:2px; display:inline-block; }
-.srow{ display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:center; padding:3px 0; font-size:13.5px; }
-.srow .st{ font-size:12px; color:var(--ink-3); }
-.srow.na{ color:var(--ink-3); }
-.srow select{ border:1px solid var(--rule); border-radius:5px; background:var(--panel); padding:1px 2px; font-size:12px; }
-.srcfoot{ padding:0 16px 14px; font-size:12.5px; color:var(--ink-3); display:flex; gap:18px; flex-wrap:wrap; align-items:center; }
-.srcfoot label{ display:inline-flex; gap:6px; align-items:center; cursor:pointer; color:var(--ink-2); }
-.limits{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
-.limits input{ width:52px; border:1px solid var(--rule); border-radius:5px; padding:2px 5px; background:var(--panel); }
-
-/* ---------- matrix ---------- */
-.matrix{ overflow:auto; max-height:calc(100vh - 120px); border-radius:12px; }
-table.mx{ border-collapse:separate; border-spacing:0; width:max-content; min-width:100%; font-size:13.5px; }
-.mx th,.mx td{ border-right:1px solid var(--rule-2); border-bottom:1px solid var(--rule-2); padding:0; text-align:center; white-space:nowrap; }
-.mx thead th{ position:sticky; background:var(--panel); z-index:3; font-weight:600; }
-.mx thead tr.g th{ top:0; height:30px; font:700 13.5px var(--cond); letter-spacing:.2px; border-bottom:1px solid var(--rule); color:var(--ink); padding:0 8px; }
-.mx thead tr.c th{ top:30px; height:44px; font:600 12.5px/1.15 var(--cond); color:var(--ink-2); border-bottom:2px solid var(--ink); padding:4px 6px; cursor:pointer; min-width:46px; white-space:normal; }
-.mx thead tr.c th:hover{ color:var(--ink); }
-.mx thead tr.c th.sel{ color:var(--accent); box-shadow:inset 0 -3px 0 var(--accent); }
-.mx thead tr.c th small{ display:block; font-weight:500; color:var(--ink-3); font-size:11px; }
-.mx .gstart{ border-left:1px solid var(--rule); }
-.mx .stick{ position:sticky; left:0; z-index:2; background:var(--panel); text-align:left; }
-.mx .stick2{ position:sticky; left:84px; z-index:2; background:var(--panel); border-right:1px solid var(--rule); }
-.mx thead .stick,.mx thead .stick2{ z-index:4; }
-.mx td.day{ width:84px; min-width:84px; padding:0 10px; font:600 13px/1.2 var(--cond); color:var(--ink-2); vertical-align:top; padding-top:6px; }
-.mx td.day b{ display:block; color:var(--ink); font-size:15px; }
-.mx td.tm{ min-width:92px; padding:0 10px; font-weight:600; text-align:left; color:var(--ink); }
-.mx td.tm small{ color:var(--ink-3); font-weight:500; margin-left:4px; }
-.mx tr.dstart td{ border-top:2px solid var(--ink-3); }
-.mx tr.sect td.tm{ box-shadow:inset 3px 0 0 var(--rule); }
-.mx td.c{ height:30px; min-width:46px; cursor:cell; position:relative; padding:0 6px; }
-.mx td.c.na{ color:var(--ink-3); cursor:default; }
-.mx td.c.lo{ color:var(--ink-3); }
-.mx.across td.c.span{ box-shadow:inset 0 -2px 0 rgba(var(--p),.35); }
-.mx td.c[rowspan]{ box-shadow:inset 3px 0 0 rgba(var(--p),.35); }
-.mx td.c.ed{ font-weight:700; }
-.mx td.c.ed::after{ content:""; position:absolute; top:0; right:0; border-style:solid; border-width:0 7px 7px 0; border-color:transparent var(--edit) transparent transparent; }
-.mx td.c.bad{ box-shadow:inset 0 -2px 0 var(--warn); color:var(--warn); }
-.mx td.c.cur{ outline:2px solid var(--accent); outline-offset:-2px; z-index:1; }
-.mx tr.hov td, .mx td.hov, .mx th.hov{ box-shadow:inset 0 0 0 999px rgba(var(--p),.08); }
-.mx th.hov{ color:var(--accent); }
-/* time across */
-.mx.across thead tr.g th{ text-align:left; padding-left:8px; }
-.mx.across thead tr.g th.stick{ text-align:left; color:var(--ink-3); font-weight:600; }
-.mx.across thead tr.c th.tcol{ min-width:44px; padding:4px 3px; font:600 12.5px/1.1 var(--cond); color:var(--ink-2); cursor:default; }
-.mx.across thead tr.c th.tcol small{ font-size:10.5px; }
-.mx.across .dcol{ border-left:2px solid var(--ink-3); }
-.mx.across th.grp{ width:118px; min-width:118px; max-width:118px; white-space:normal; text-align:left; vertical-align:top; padding:6px 10px; font:700 12.5px/1.2 var(--cond); color:var(--ink); background:var(--panel-2); border-right:1px solid var(--rule); }
-.mx.across th.plab{ left:118px; min-width:104px; text-align:left; padding:0 10px; font:600 13px/1.15 var(--cond); color:var(--ink-2); cursor:pointer; white-space:nowrap; }
-.mx.across th.plab small{ font-weight:500; color:var(--ink-3); font-size:11px; }
-.mx.across th.plab.sel{ color:var(--accent); box-shadow:inset -3px 0 0 var(--accent); }
-.mx.across tr.gfirst > *{ border-top:2px solid var(--rule); }
-.mx.across thead tr.c th{ border-bottom:2px solid var(--ink); }
-.mx.across td.c{ min-width:44px; padding:0 3px; }
-.mx td.c input,.mx td.c select{ position:absolute; inset:0; width:100%; height:100%; border:0; text-align:center; background:var(--panel); font-weight:700; outline:2px solid var(--edit); outline-offset:-2px; padding:0 2px; }
-.mx td.sev{ min-width:84px; }
-.foot{ color:var(--ink-3); font-size:12.5px; max-width:100ch; padding:0 2px; }
-.foot p{ margin:4px 0; }
-
-/* ---------- dialog / toast ---------- */
-dialog{ border:1px solid var(--rule); border-radius:14px; padding:0; width:min(520px,92vw); background:var(--panel); color:var(--ink); box-shadow:0 24px 60px rgba(0,0,0,.25); }
-dialog::backdrop{ background:rgba(13,21,29,.45); }
-.dlg{ padding:22px 24px 20px; }
-.dlg h2{ margin:0 0 4px; font:700 24px/1.1 var(--cond); }
-.dlg p.sub{ margin:0 0 16px; color:var(--ink-2); font-size:14px; }
-.dlg fieldset{ border:0; padding:0; margin:0 0 14px; }
-.dlg legend{ font:600 13px var(--cond); color:var(--ink-3); margin-bottom:6px; letter-spacing:.3px; }
-.dlg .opts{ display:flex; flex-wrap:wrap; gap:6px 16px; }
-.dlg .opts label{ display:inline-flex; gap:7px; align-items:center; cursor:pointer; }
-.dlg .qc{ background:var(--warn-bg); color:var(--warn); border-radius:8px; padding:9px 12px; font-size:13.5px; margin-bottom:14px; display:none; max-height:130px; overflow:auto; }
-.dlg .qc.show{ display:block; }
-.dlg .qc ul{ margin:4px 0 0; padding-left:18px; }
-.dlg .row{ display:flex; gap:10px; justify-content:flex-end; margin-top:6px; }
-.dlg input[type=text]{ padding:6px 9px; border:1px solid var(--rule); border-radius:7px; background:var(--panel); width:90px; text-transform:uppercase; }
-.toast{ position:fixed; left:50%; bottom:calc(22px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%) translateY(20px); background:var(--ink); color:var(--panel); padding:10px 18px; border-radius:10px; font-weight:500; opacity:0; transition:all .2s; pointer-events:none; z-index:50; }
-.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
-
-@media (max-width:860px){
-  .top{ grid-template-columns:1fr; grid-template-areas:"brand" "actions" "sites"; }
-  .sites{ flex-wrap:wrap; margin-left:0; }
-}
-@media (max-width:640px){
-  .top,.statusline,main{ padding-left:14px; padding-right:14px; }
-  .banner{ margin-left:14px; margin-right:14px; }
-  .sites button{ min-width:0; flex:1 1 30%; }
-  .locator{ display:none; }
-}
-@media (prefers-reduced-motion:reduce){ *{ transition:none !important; } }
-@media print{
-  .top .actions,.statusline,.editor,details.sources,.banner{ display:none !important; }
-  .matrix{ max-height:none; overflow:visible; }
-  body{ background:#fff; }
-}
+.btn.primary{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:600; }
+.btn.sm{ padding:3px 9px; font-size:13px; }
+.btn.ghost{ background:transparent; }
+.top .btn{ background:transparent; color:var(--steel-ink); border-color:rgba(255,255,255,.3); }
+.statusline{ display:flex; gap:8px 22px; align-items:center; flex-wrap:wrap; padding:9px 28px; background:var(--panel); border-bottom:1px solid var(--rule); font-size:13.5px; color:var(--ink-2); }
+.statusline .live::before{ content:""; display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--ok); margin-right:7px; }
+#suspense b{ color:var(--ink); } #suspense.late{ color:var(--warn); }
+.statusline .sp{ flex:1; }
+.banner{ display:none; margin:12px 28px 0; padding:9px 14px; border-radius:8px; font-weight:500; }
+.banner.show{ display:block; } .banner.demo{ background:var(--edit-bg); color:var(--edit); }
+main{ padding:16px 28px 40px; display:grid; gap:16px; grid-template-columns:minmax(0, 1fr) 380px; align-items:start; }
+main > *{ min-width:0; }
+.col{ display:grid; gap:16px; min-width:0; }
+.panel{ background:var(--panel); border:1px solid var(--rule); border-radius:12px; padding:14px 16px; }
+.panel h2{ margin:0; font:700 21px/1.1 var(--cond); }
+.panel h2 span{ font:500 15px var(--font); color:var(--ink-2); margin-left:6px; }
+.panel h3{ margin:0 0 8px; font:700 15px var(--cond); color:var(--ink-2); letter-spacing:.3px; text-transform:uppercase; }
+.mut{ color:var(--ink-3); font-size:13px; }
+.tabs{ display:flex; gap:0; border:1px solid var(--rule); border-radius:10px; overflow:hidden; background:var(--panel); width:max-content; max-width:100%; }
+.tabs button{ border:0; background:transparent; padding:8px 18px; text-align:left; cursor:pointer; border-right:1px solid var(--rule); }
+.tabs button:last-child{ border-right:0; }
+.tabs .n{ display:block; font:700 18px/1.1 var(--cond); }
+.tabs .p{ display:block; font-size:12px; color:var(--ink-3); line-height:1.25; }
+.tabs button[aria-pressed="true"]{ background:var(--accent); color:var(--accent-ink); }
+.tabs button[aria-pressed="true"] .p{ color:inherit; opacity:.8; }
+#blockHead{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+.kv{ display:flex; gap:18px; flex-wrap:wrap; font-size:13.5px; color:var(--ink-2); align-items:center; }
+.kv b{ color:var(--ink); }
+table.fx{ width:100%; border-collapse:separate; border-spacing:0; }
+.fx th,.fx td{ border-bottom:1px solid var(--rule-2); padding:0; text-align:center; }
+.fx thead th{ font:600 13px/1.15 var(--cond); color:var(--ink-2); padding:6px 4px; border-bottom:2px solid var(--ink); }
+.fx thead th small{ display:block; font-weight:500; color:var(--ink-3); font-size:11.5px; }
+.fx th.hr{ text-align:left; font:700 14px var(--cond); padding:6px 8px; white-space:nowrap; }
+.fx th.hr small{ display:block; font:500 11.5px var(--font); color:var(--ink-3); }
+.fx td.cell{ position:relative; cursor:pointer; font:500 16px var(--mono); height:46px; min-width:64px; padding:0 4px; }
+.fx td.cell:hover{ box-shadow:inset 0 0 0 2px var(--accent); }
+.fx td.cell i{ position:absolute; right:4px; bottom:2px; font:600 10.5px var(--font); font-style:normal; color:var(--ink-3); }
+.fx td.cell.hi{ background:var(--hi); } .fx td.cell.mid{ background:var(--mid); } .fx td.cell.lo{ background:var(--lo); }
+.fx td.cell.ed::after{ content:""; position:absolute; top:0; right:0; border-style:solid; border-width:0 9px 9px 0; border-color:transparent var(--edit) transparent transparent; }
+.fx td.cell .wx{ font:600 13px var(--font); }
+.fx td.cell .none{ color:var(--ink-3); font:500 13px var(--font); }
+.fx td.tot{ font:600 14px var(--font); color:var(--ink-2); width:70px; }
+.fx tr.obs th,.fx tr.obs td{ background:var(--panel-2); font-size:12.5px; height:28px; }
+.fx tr.obs td span{ font-family:var(--mono); color:var(--ink-2); margin-right:5px; }
+.fx tr.obs td b{ font-weight:700; } .fx tr.obs b.pos{ color:var(--ok); } .fx tr.obs b.neg{ color:var(--warn); }
+.legend{ display:flex; gap:14px; font-size:12.5px; color:var(--ink-2); margin-top:8px; flex-wrap:wrap; }
+.legend i{ display:inline-block; width:14px; height:10px; border-radius:2px; vertical-align:-1px; margin-right:5px; }
+.pop{ position:absolute; z-index:40; width:290px; background:var(--panel); border:1px solid var(--rule); border-radius:12px; box-shadow:0 16px 40px rgba(0,0,0,.22); padding:10px 12px 12px; }
+.pophead{ display:flex; align-items:center; gap:8px; font-size:14px; margin-bottom:8px; }
+.pophead .x{ margin-left:auto; border:0; background:transparent; font-size:20px; line-height:1; cursor:pointer; color:var(--ink-3); }
+.alts{ display:grid; gap:4px; }
+.alts button{ display:flex; justify-content:space-between; border:1px solid var(--rule); background:var(--panel-2); border-radius:7px; padding:5px 9px; cursor:pointer; font-family:var(--mono); }
+.alts button i{ font:600 12.5px var(--font); font-style:normal; color:var(--ink-2); }
+.alts button.on{ border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
+.probs{ display:flex; flex-wrap:wrap; gap:4px 12px; font-size:12.5px; color:var(--ink-2); margin:8px 0 2px; }
+.own{ display:flex; gap:8px; align-items:center; margin-top:10px; font-size:13px; }
+.own input,.own select{ flex:1; border:1px solid var(--rule); border-radius:7px; padding:5px 8px; background:var(--panel); font-family:var(--mono); }
+.popfoot{ font-size:12px; color:var(--ink-3); margin-top:8px; }
+.seg{ display:inline-flex; border:1px solid var(--rule); border-radius:8px; overflow:hidden; flex-wrap:wrap; }
+.seg button{ border:0; background:var(--panel); padding:5px 11px; cursor:pointer; font-size:13px; border-right:1px solid var(--rule-2); }
+.seg button[aria-pressed="true"]{ background:var(--accent); color:var(--accent-ink); }
+.ghead{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+.scroll{ overflow-x:auto; }
+table.gd{ border-collapse:collapse; width:100%; font-size:13px; }
+.gd th,.gd td{ border-bottom:1px solid var(--rule-2); padding:4px 8px; text-align:center; white-space:nowrap; }
+.gd th{ font:600 12.5px var(--cond); color:var(--ink-2); }
+.gd td:first-child,.gd th:first-child{ text-align:left; }
+.gd td{ font-family:var(--mono); font-size:12.5px; }
+.gd td:first-child,.gd td:last-child{ font-family:var(--font); }
+.gd tr.off td{ font-weight:700; background:var(--panel-2); }
+.gd tr.off2 td{ color:var(--ink-3); }
+.gd td.match{ color:var(--ok); font-weight:600; }
+svg#meteo{ width:100%; height:300px; display:block; }
+#meteo .win{ fill:rgba(45,93,140,.09); } #meteo .now{ stroke:var(--gold); stroke-dasharray:3 3; }
+#meteo .g{ stroke:var(--rule-2); } #meteo .ax{ font:500 10.5px var(--font); fill:var(--ink-3); } #meteo .pl{ font:600 11.5px var(--cond); fill:var(--ink-2); }
+#meteo .band{ opacity:.18; stroke:none; } #meteo .med{ fill:none; stroke-width:1.8; }
+#meteo .tt{ fill:#C0462F; stroke:#C0462F; } #meteo .td{ fill:#2F7A4A; stroke:#2F7A4A; } #meteo .ww{ fill:#2D5D8C; stroke:#2D5D8C; } #meteo .cc{ stroke:#7A4FA0; fill:#7A4FA0; } #meteo .vv{ stroke:#B5862B; fill:#B5862B; }
+#meteo .med.q{ stroke-dasharray:3 3; opacity:.7; } #meteo .ob{ stroke:var(--panel); stroke-width:.8; }
+.mleg{ display:flex; gap:12px; flex-wrap:wrap; font-size:12px; color:var(--ink-2); }
+.mleg i{ display:inline-block; width:12px; height:3px; vertical-align:middle; margin-right:5px; }
+ul.obs{ list-style:none; margin:0; padding:0; max-height:330px; overflow:auto; font-size:12.5px; }
+ul.obs li{ display:grid; grid-template-columns:70px 1fr; gap:6px; padding:4px 0; border-bottom:1px solid var(--rule-2); }
+ul.obs li.speci .tm{ color:var(--edit); font-weight:600; }
+ul.obs code,#tafBox code{ font:12px/1.45 var(--mono); white-space:pre-wrap; word-break:break-word; }
+ul.obs .tm{ font:600 12px var(--mono); color:var(--ink-3); }
+#tafBox{ background:var(--panel-2); border-radius:8px; padding:8px 10px; }
+table.sk{ width:100%; border-collapse:collapse; font-size:12.5px; }
+.sk th,.sk td{ padding:3px 4px; border-bottom:1px solid var(--rule-2); text-align:right; }
+.sk th:first-child,.sk td:first-child{ text-align:left; }
+.sk small{ color:var(--ink-3); margin-left:3px; font-size:10.5px; }
+.subgrid{ display:grid; grid-template-columns:auto 1fr; gap:14px 22px; align-items:start; }
+#mc{ display:flex; gap:8px; flex-wrap:wrap; }
+#mc label{ display:flex; gap:5px; align-items:center; font-size:13.5px; font-weight:600; }
+#mc select{ border:1px solid var(--rule); border-radius:6px; padding:3px 6px; background:var(--panel); }
+textarea{ width:100%; border:1px solid var(--rule); border-radius:8px; padding:9px 11px; background:var(--panel-2); font:14px/1.5 var(--font); resize:vertical; }
+.chk{ font-size:13.5px; padding:7px 10px; border-radius:7px; } .chk.ok{ background:var(--ok-bg); color:var(--ok); } .chk.warn{ background:var(--edit-bg); color:var(--edit); }
+.actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+#fname{ font:500 13px var(--mono); color:var(--ink-2); }
+.fileb{ position:relative; overflow:hidden; display:inline-block; }
+.fileb input{ position:absolute; inset:0; opacity:0; cursor:pointer; }
+.gr{ border-top:1px solid var(--rule-2); padding:10px 0; }
+.gr h3{ display:flex; gap:10px; align-items:center; text-transform:none; font-size:16px; color:var(--ink); }
+.gr h3 span{ font:500 12.5px var(--font); color:var(--ink-3); }
+.gr h3 .btn{ margin-left:auto; }
+table.gt{ border-collapse:collapse; font-size:13px; width:100%; }
+.gt th,.gt td{ padding:3px 8px; border-bottom:1px solid var(--rule-2); text-align:right; }
+.gt th:first-child,.gt td:first-child{ text-align:left; }
+.gt tr.me td{ background:var(--panel-2); font-weight:700; }
+.gt tr.beat td{ font-weight:700; color:var(--ok); }
+details > summary{ cursor:pointer; list-style:none; display:flex; gap:10px; align-items:baseline; }
+details > summary::-webkit-details-marker{ display:none; }
+details > summary h2::before{ content:"\25B8  "; color:var(--ink-3); }
+details[open] > summary h2::before{ content:"\25BE  "; }
+.mixctl{ display:flex; gap:10px 16px; align-items:center; flex-wrap:wrap; margin:6px 0 10px; font-size:13.5px; }
+.mixctl .sp{ flex:1; }
+.mixctl select{ border:1px solid var(--rule); border-radius:6px; padding:3px 6px; background:var(--panel); }
+table.mix{ width:100%; border-collapse:collapse; font-size:13px; }
+.mix th{ font:600 12.5px var(--cond); color:var(--ink-2); text-align:left; padding:4px 6px; border-bottom:2px solid var(--ink); white-space:nowrap; }
+.mix td{ padding:4px 6px; border-bottom:1px solid var(--rule-2); vertical-align:middle; }
+.mix tr.na td{ color:var(--ink-3); } .mix tr.offr td b{ color:var(--ink-3); font-weight:500; }
+.mix small{ display:block; color:var(--ink-3); font-size:11.5px; }
+.mix .tag{ font:600 10.5px var(--cond); color:var(--ink-3); border:1px solid var(--rule); border-radius:4px; padding:0 4px; margin-left:4px; text-transform:uppercase; }
+.mix .chips{ white-space:nowrap; }
+.mix .c{ display:inline-block; font-size:11.5px; padding:1px 5px; margin:1px 2px; border-radius:4px; background:var(--panel-2); color:var(--ink-2); font-variant-numeric:tabular-nums; }
+.mix .c.na{ opacity:.5; } .mix .c.h{ background:var(--edit-bg); color:var(--edit); }
+.mix .auto{ font-weight:600; } .mix .auto.up{ color:var(--ok); } .mix .auto.dn{ color:var(--warn); }
+.mix select{ border:1px solid var(--rule); border-radius:5px; font-size:12px; background:var(--panel); }
+.mix td.bar{ width:150px; position:relative; }
+.mix td.bar span{ display:inline-block; height:8px; border-radius:4px; background:var(--accent); vertical-align:middle; max-width:100px; }
+.mix td.bar em{ font-style:normal; font-size:12px; color:var(--ink-2); margin-left:6px; }
+.sw{ position:relative; display:inline-block; width:30px; height:17px; cursor:pointer; }
+.sw input{ position:absolute; opacity:0; inset:0; margin:0; cursor:pointer; }
+.sw i{ position:absolute; inset:0; border-radius:9px; background:var(--rule); transition:background .15s; }
+.sw i::after{ content:""; position:absolute; top:2px; left:2px; width:13px; height:13px; border-radius:50%; background:#fff; transition:left .15s; }
+.sw input:checked + i{ background:var(--accent); } .sw input:checked + i::after{ left:15px; }
+.sw input:focus-visible + i{ outline:2px solid var(--accent); outline-offset:2px; }
+.srcgrid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:14px 24px; margin-top:12px; }
+.srow{ display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:center; font-size:13.5px; padding:2px 0; }
+.srow.na{ color:var(--ink-3); } .srow small{ color:var(--ink-3); }
+.srow select{ border:1px solid var(--rule); border-radius:5px; font-size:12px; background:var(--panel); }
+.opts{ display:flex; gap:10px 22px; flex-wrap:wrap; font-size:13.5px; margin-top:14px; align-items:center; }
+.opts label{ display:inline-flex; gap:7px; align-items:center; }
+.opts input[type=number],.opts input[type=text]{ width:64px; border:1px solid var(--rule); border-radius:6px; padding:3px 6px; background:var(--panel); }
+.note{ font-size:12.5px; color:var(--ink-3); margin-top:10px; max-width:110ch; }
+dialog{ border:1px solid var(--rule); border-radius:14px; padding:0; width:min(680px,94vw); background:var(--panel); color:var(--ink); box-shadow:0 24px 60px rgba(0,0,0,.3); }
+dialog::backdrop{ background:rgba(10,16,23,.5); }
+.dlg{ padding:20px 22px 18px; }
+.dlg h2{ margin:0; font:700 23px var(--cond); }
+.dlg .sub{ margin:2px 0 12px; color:var(--ink-2); }
+ul.chkl{ list-style:none; margin:0 0 14px; padding:0; max-height:55vh; overflow:auto; display:grid; gap:5px; font-size:14px; }
+ul.chkl li{ padding:6px 10px 6px 12px; border-radius:7px; border-left:4px solid var(--rule); background:var(--panel-2); }
+ul.chkl li.err{ border-color:var(--warn); background:var(--warn-bg); } ul.chkl li.warn{ border-color:var(--edit); background:var(--edit-bg); }
+ul.chkl li.info{ border-color:var(--accent); } ul.chkl li.ok{ border-color:var(--ok); background:var(--ok-bg); }
+.sk td.up{ color:var(--warn); font-weight:700; } .sk td.dn{ color:var(--accent); font-weight:700; }
+.toast{ position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(20px); background:var(--ink); color:var(--panel); padding:10px 18px; border-radius:10px; opacity:0; transition:all .2s; pointer-events:none; z-index:60; }
+.toast.show{ opacity:1; transform:translateX(-50%); }
+@media (max-width:1100px){ main{ grid-template-columns:1fr; } }
+@media (max-width:700px){ .top,.statusline,main{ padding-left:14px; padding-right:14px; } .top{ grid-template-columns:1fr; } .top .ctl{ justify-content:flex-start; } .subgrid{ grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
-<nav class="pagenav" aria-label="Products"><a href="./" data-page="planning">Planning forecast</a><a href="exposure.html" data-page="exposure">Exposure forecasts</a><a href="taf.html" data-page="taf">KCOF TAF</a></nav>
 <header class="top">
-  <div class="brand">
-    <svg class="locator" id="locator" viewBox="0 0 80 118" aria-label="Forecast point locator"></svg>
-    <div>
-      <h1 id="pageTitle">Daily planning forecast</h1>
-      <div class="where" id="where"></div>
-    </div>
+  <div>
+    <h1>Thor's Forecast Challenge <span>2026</span></h1>
+    <div class="sub">Operation Northern Lantern forecast workbench: guidance, observations, scoring-optimized values and the daily workbook</div>
   </div>
-  <nav class="sites" id="sites" aria-label="Forecast point"></nav>
-  <div class="actions">
-    <button class="btn icon" id="undo" title="Undo (Ctrl+Z)" aria-label="Undo" disabled>&#8630;</button>
-    <button class="btn icon" id="redo" title="Redo (Ctrl+Shift+Z)" aria-label="Redo" disabled>&#8631;</button>
-    <button class="btn" id="resetSite" title="Clear every edit for this point">Reset to guidance</button>
-    <button class="btn primary" id="publish">Save and publish</button>
+  <div class="ctl">
+    <select id="daySel" aria-label="Challenge day"></select>
+    <input id="team" placeholder="TEAM NAME" maxlength="24" aria-label="Team name" autocomplete="off">
+    <button class="btn" id="refresh">Refresh data</button>
+  </div>
+  <div class="custom" id="customRow" hidden>
+    <label>ICAO(s) <input id="custIcao" placeholder="ETAR or ETAR,KBGR"></label>
+    <label>Valid start (UTC) <input id="custStart" placeholder="2026-10-28T06Z"></label>
+    <button class="btn" id="custGo">Load</button>
   </div>
 </header>
-<div class="statusline">
-  <span class="live" id="live">Loading guidance</span>
-  <span><span class="k">Last published</span><span id="lastPub">not yet</span></span>
-  <span><span class="k">Edits</span><span id="editCount">0</span></span>
-  <span class="spacer"></span>
-  <span class="seg" role="group" aria-label="Matrix layout"><button id="orD" aria-pressed="false" title="Time runs down the rows">Time down</button><button id="orA" aria-pressed="true" title="Time runs across the columns">Time across</button></span>
-  <span class="seg" id="wuSel" role="group" aria-label="Wind units"><button type="button" data-u="kt">kt</button><button type="button" data-u="mph">mph</button><button type="button" data-u="m/s">m/s</button><button type="button" data-u="ft/s">ft/s</button></span>
-  <span class="seg" role="group" aria-label="Time zone"><button id="tzL" aria-pressed="true">Local</button><button id="tzZ" aria-pressed="false">Zulu</button></span>
-  <button class="btn" id="refresh" style="padding:4px 10px;font-size:13px">Refresh guidance</button>
-  <label>Forecaster <input type="text" id="initials" maxlength="5" placeholder="Init" autocomplete="off"></label>
-</div>
+<div class="statusline"><span class="live" id="live">Loading</span><span id="suspense"></span><span class="sp"></span><span class="mut">Values are chosen to maximize expected points under the TFC26 scoring chart; click any cell to see alternatives.</span></div>
 <div class="banner" id="banner"></div>
-
 <main>
-  <section class="panel expsetup" id="expSetup" hidden aria-label="Operation setup">
-    <div class="esrow">
-      <label class="grow">Operation <input id="expOp" placeholder="e.g. Crane lift, vehicle rollout, propellant load" autocomplete="off"></label>
-      <label>Start <input type="datetime-local" id="expStart"></label>
-      <label>End <input type="datetime-local" id="expEnd"></label>
-      <span class="tzn" id="expTz"></span>
-      <span class="seg" id="expQuick" role="group" aria-label="Quick range"><button type="button" data-q="12">12 h</button><button type="button" data-q="24">24 h</button><button type="button" data-q="48">48 h</button><button type="button" data-q="72">3 days</button><button type="button" data-q="168">7 days</button></span>
-      <label>Hourly for the first <select id="expHourly"><option value="6">6 h</option><option value="12">12 h</option><option value="24">24 h</option><option value="36">36 h</option><option value="48">48 h</option><option value="72">72 h</option><option value="all">whole window</option></select>, then 3-hourly</label>
-      <span class="mut" id="expLen"></span>
-    </div>
-    <div class="esrow" id="expCustom" hidden>
-      <strong>Custom point</strong>
-      <label>Name <input id="cuName" maxlength="24" autocomplete="off"></label>
-      <label>Latitude <input id="cuLat" inputmode="decimal" style="width:100px"></label>
-      <label>Longitude <input id="cuLon" inputmode="decimal" style="width:100px"></label>
-      <button class="btn" type="button" id="cuLoad">Load point</button>
-    </div>
-    <div class="cons">
-      <h3>Constraints</h3>
-      <div id="expCons"></div>
-      <div class="actions"><button class="btn" type="button" id="addWind">+ Wind constraint</button><button class="btn" type="button" id="addTemp">+ Temperature constraint</button></div>
-    </div>
-  </section>
-  <section class="panel editor" aria-label="Graph editor">
-    <div class="params" id="params"></div>
-    <div class="charthead">
-      <h2 id="ptitle">Temperature</h2><span class="unit" id="punit"></span>
-      <span class="hint" id="phint">Drag across the graph to draw the forecast. Hold Alt while dragging to erase back to guidance. Double-click a point to reset it.</span>
-<div class="legend" id="legend"></div>
-    </div>
-    <div class="chartwrap" id="chartwrap">
-      <svg id="chart" tabindex="0" role="application" aria-label="Forecast graph editor. Select points, then use the up and down arrow keys to move them."></svg>
-      <div class="tip" id="tip"></div>
-    </div>
-    <div class="tools">
-      <span class="seg" id="modeSel" role="group" aria-label="Editing mode"><button type="button" data-m="select" title="Select points, then drag or nudge them">Select and drag</button><button type="button" data-m="draw" title="Paint the line by dragging across the graph">Draw</button></span>
-      <span id="drawWrap" hidden>Line <span class="seg" id="drawSel" role="group" aria-label="Line to draw"></span></span>
-      <span class="selinfo" id="selinfo"></span>
-      <span class="sp"></span>
-      <button class="btn" id="nudgeDn">Lower all</button>
-      <button class="btn" id="nudgeUp">Raise all</button>
-      <span class="setv"><input id="setVal" inputmode="decimal" placeholder="Value" aria-label="Value to set"><button class="btn" id="setGo">Set all</button></span>
-      <button class="btn" id="smooth">Smooth</button>
-      <button class="btn" id="resetParam">Reset parameter to guidance</button>
-    </div>
-  </section>
-
-  <details class="panel sources" id="sourcesPanel">
-    <summary><span class="chev">&#9656;</span>Guidance sources <span class="sum" id="srcSum"></span></summary>
-    <div class="srcgrid" id="srcgrid"></div>
-    <div class="srcfoot">
-      <label><input type="checkbox" id="linkProbs" checked> Shift exceedance probabilities with my wind and temperature edits</label>
-      <label><input type="checkbox" id="linkWin" checked> Link 1, 3 and 6 hr precipitation and lightning probabilities</label>
-      <label><input type="checkbox" id="clampProbs" checked> Cap guidance probabilities at 99% (1% rounds down to 0)</label>
-      <span class="limits plan-only">Hot threshold (°F) <input type="number" id="hotThr" step="1"></span>
-    </div>
-  </details>
-
-  <section class="panel matrix" id="matrix" aria-label="Forecast matrix" tabindex="-1"></section>
-
-  <div class="foot">
-    <p id="foot1">Hourly for the first 24 hours, then 3-hour blocks through day 5 and 6-hour blocks on days 6 and 7. In blocks, temperature shows the warmest value for daytime blocks and the coolest for overnight blocks, winds show the block maximum, and probabilities are the chance of the event at any time in the block. 3 hr and 6 hr probability cells are merged across the hours they cover (hover a cell to see the exact period). With linking on, the 3 and 6 hr values are built from the 1 hr (or 3-hour block) values inside them, using how the guidance itself combines hours for that period; edit a 3 or 6 hr value and the hours inside it scale together to match. In 3- and 6-hour blocks, the 1 hr cells show the highest 1-hour chance inside the block, and in 6-hour blocks the 3 hr cells show the highest 3-hour chance. Guidance probabilities are whole percents, with 1% rounded down to 0. In the table, press Enter to edit a cell, Delete to return it to guidance, and paste a row or column straight from Excel.</p>
-    <p>Winds at 54 ft and 200 ft are interpolated from each model's 10 m and 80 m winds (power law where 80 m is missing). Peaks scale the 10 m gust factor with height. WBGT is estimated from temperature, humidity, wind and sunshine. Lightning comes only from guidance with explicit thunder probabilities: SPC calibrated thunder from the HREF and REFS (weighted double by default), LAMP, MOS and NBM text. RRFS and the REFS members come from the high-res workflow.</p>
+  <div class="col">
+    <nav class="tabs" id="tabs" aria-label="Forecast locations"></nav>
+    <section class="panel">
+      <div id="blockHead"></div>
+      <div class="scroll" id="block"></div>
+      <div class="legend"><span><i style="background:var(--hi)"></i>Likely full or near-full points</span><span><i style="background:var(--mid)"></i>Partial</span><span><i style="background:var(--lo)"></i>Low confidence</span><span>Small number: expected points</span><span><i style="background:var(--edit)"></i>Edited by you</span></div>
+    </section>
+    <section class="panel">
+      <div class="ghead"><h2>Model mixer</h2><span class="mut" id="mixSum"></span></div>
+      <div class="mixctl">
+        <span>Automatic weighting</span>
+        <span class="seg" id="wmode" role="group" aria-label="Weighting mode"><button type="button" data-m="equal" title="Every source counts the same (times your manual weight)">Equal</button><button type="button" data-m="skill" title="Weight each source per element by how well it verified at this station over the last 24 h">Recent skill</button><button type="button" data-m="skill+hist" title="Recent skill, plus how each source scored on the days you've already graded">Skill + competition history</button></span>
+        <label>Use <select id="topN"><option value="0">all sources</option><option value="5">best 5</option><option value="8">best 8</option><option value="12">best 12</option><option value="16">best 16</option></select></label>
+        <span class="sp"></span>
+        <span class="seg" id="presets" role="group" aria-label="Presets"><button type="button" data-p="all">All on</button><button type="button" data-p="global">Global + ensembles</button><button type="button" data-p="hires">Regional, MOS + ensembles</button><button type="button" data-p="det">No ensembles</button><button type="button" data-p="reset">Reset</button></span>
+      </div>
+      <div class="scroll" id="mixer"></div>
+      <p class="note">Turn sources on or off, or set a manual weight; the automatic factor (from verification at this station) multiplies it, separately for each element. Verification chips: T, Td, Wind and Dir are mean errors (lower is better); Vis, Cig and Wx are TFC points per hour (higher is better). "Best N" keeps the N highest-ranked sources and drops the rest automatically. Everything recalculates immediately.</p>
+    </section>
+    <section class="panel">
+      <div class="ghead"><h2>Observations against guidance</h2><div class="mleg"><span><i style="background:#C0462F"></i>Temp</span><span><i style="background:#2F7A4A"></i>Dew point</span><span><i style="background:#2D5D8C"></i>Wind max</span><span><i style="background:#7A4FA0"></i>Ceiling (dashed: 25th pct)</span><span><i style="background:#B5862B"></i>Visibility</span><span>Dots: observed. Shaded: valid window</span></div></div>
+      <svg id="meteo" role="img" aria-label="Meteogram"></svg>
+    </section>
+    <section class="panel">
+      <div class="ghead"><h2>Guidance by source</h2><div class="seg" id="elSel"></div></div>
+      <div class="scroll" id="guide"></div>
+      <p class="note">Each row is that source's own best forecast under the scoring chart. Green values match yours. Weights include the recent-skill factor.</p>
+    </section>
+    <section class="panel" id="outlookCard" hidden>
+      <div class="ghead"><h2>Three-Day ETAR Outlook draft <span>T+3 to T+5</span></h2><div class="actions"><button class="btn sm" id="outlookRegen">Regenerate</button><button class="btn sm" id="outlookDl">Download .txt</button></div></div>
+      <textarea id="outlookTxt" rows="12"></textarea>
+      <p class="note" id="outlookNote"></p>
+    </section>
+    <section class="panel">
+      <h2>Submission</h2>
+      <div class="subgrid" style="margin-top:10px">
+        <strong>Date</strong><input type="date" id="subDate" style="width:170px;border:1px solid var(--rule);border-radius:7px;padding:4px 8px;background:var(--panel)">
+        <strong>Multiple choice</strong><div id="mc"></div>
+        <strong>Short answer / RFI / brief</strong><div><textarea id="sa" rows="7" placeholder="Goes into the Short Answer / RFI / CC Brief box of the workbook"></textarea><div class="mut" id="saCount"></div></div>
+        <strong>File</strong><div><span id="fname"></span></div>
+        <span></span><div class="chk" id="subCheck"></div>
+      </div>
+      <div class="actions" style="margin-top:12px">
+        <button class="btn primary" id="dl">Download workbook</button>
+        <button class="btn" id="chkBtn">Check submission</button>
+        <button class="btn" id="saveSub">Save submission for grading</button>
+        <button class="btn" id="copyTxt">Copy forecast as text</button>
+      </div>
+      <p class="note">The workbook is the official TFC26 template with only the entry cells filled in. Email it to AF.A39T.workflow@us.af.mil before the suspense.</p>
+    </section>
+    <section class="panel">
+      <div class="ghead"><h2>Grading</h2><div class="actions"><span class="btn sm fileb">Import workbook<input type="file" id="importWb" accept=".xlsx"></span><button class="btn sm" id="exportSubs">Export saved</button><span class="btn sm fileb">Import saved<input type="file" id="importSubs" accept=".json"></span></div></div>
+      <div id="grades"></div>
+    </section>
+    <details class="panel">
+      <summary><h2>Bias, persistence, TAF and scoring assumptions</h2></summary>
+      <div class="opts">
+        <label><input type="checkbox" id="optBias"> Remove recent bias (temperature, dew point, wind)</label>
+        <label>Persistence weight <input type="number" id="wPersist" min="0" max="10" step="0.5"></label>
+        <label>TAF weight <input type="number" id="wTaf" min="0" max="10" step="0.5"></label>
+      </div>
+      <h3 style="margin-top:16px">Scoring rules</h3>
+      <div class="opts" style="margin-top:4px">
+        <label>No significant weather entry <select id="rWxCode"><option value="">blank</option><option value="None">None</option></select></label>
+        <label>No-ceiling entry <input type="text" id="rCeil" maxlength="4" placeholder="blank"></label>
+        <label>Temp/dew point −1 at <input type="number" id="rTp" min="1" max="10" step="1"> °C or more off</label>
+        <label>Only forecast weather at a chance of at least <input type="number" id="rMin" min="0" max="90" step="5"> %</label>
+        <label><input type="checkbox" id="rAny"> Temp/dew point checked against every report in the hour, SPECIs included</label>
+        <label><input type="checkbox" id="rOk"> These match A39T's answer</label>
+      </div>
+      <div class="scroll"><table class="gd wxm" style="margin-top:10px;max-width:760px"><thead><tr><th>Observed ↓ / Forecast →</th><th>Freezing</th><th>Frozen</th><th>Liquid</th><th>Non-precip hydrometeor</th><th>Lithometeor</th><th>None (blank)</th></tr></thead><tbody>
+        <tr><td>Freezing</td><td>6</td><td>−2</td><td>−2</td><td>−2</td><td>−2</td><td>−2</td></tr>
+        <tr><td>Frozen</td><td>−2</td><td>4</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+        <tr><td>Liquid</td><td>−2</td><td>0</td><td>4</td><td>0</td><td>0</td><td>0</td></tr>
+        <tr><td>Non-precip hydrometeor</td><td>−2</td><td>0</td><td>0</td><td>2</td><td>0</td><td>0</td></tr>
+        <tr><td>Lithometeor</td><td>−2</td><td>0</td><td>0</td><td>0</td><td>2</td><td>0</td></tr>
+        <tr><td>None</td><td>−2</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+      </tbody></table></div>
+      <p class="note">From the commissioner's grading table. Wind direction: ±10° 3, ±20° 2, ±30° 1, VRB 0. Wind speed: ±2 kt 3, ±3 2, ±4 1, 8 kt or more off −1. Visibility: exact 6, ±400 m 4, ±800 m 2, 1600 m or more off −2. Ceiling: ±200 ft 6, ±400 ft 4, ±1000 ft 2; blank when no ceiling is observed 6, a ceiling on one side only 0. Temperature and dew point: exact 1, 3 °C or more off −1. Present weather: the matrix above. Since a wrong non-freezing call costs nothing, the optimizer forecasts the type with the best expected score; raise the minimum chance only if you'd rather not forecast low-probability weather.</p>
+      <p class="note">Hourly verification: all METAR/SPECI reports within each hour. Wind speed is the highest speed or gust reported, direction is from that report (VRB scores 0), visibility and ceiling are the lowest, present weather is any category reported (vicinity ignored), and temperature and dew point count as accurate if they match any report in the hour. SPECIs are included for every element. The scoring chart doesn't say how a blank Present Wx or "no ceiling" is graded, so those are settings here; the optimizer adapts to whatever you set.</p>
+    </details>
   </div>
+  <aside class="col">
+    <section class="panel"><h3>Latest observations</h3><ul class="obs" id="obsList"></ul></section>
+    <section class="panel"><h3>Current TAF</h3><div id="tafBox"></div></section>
+    <section class="panel"><h3>Climatology for this window</h3><div id="climBox"></div></section>
+    <section class="panel"><h3>Model verification, last 24 h</h3><div id="skill"></div></section>
+  </aside>
 </main>
-
-<dialog id="pubDlg">
-  <form method="dialog" class="dlg" id="pubForm">
-    <h2>Save and publish</h2>
-    <p class="sub">Downloads the official forecast. Points you haven't edited go out as guidance. The PDF and HTML show the table with time across, one page per few days.</p>
-    <fieldset><legend>Forecast points</legend><div class="opts" id="pubSites"></div></fieldset>
-    <fieldset><legend>Files</legend><div class="opts">
-      <label><input type="checkbox" id="fmtX" checked> Excel workbook</label>
-      <label><input type="checkbox" id="fmtC" checked> CSV</label>
-      <label><input type="checkbox" id="fmtP" checked> PDF</label>
-      <label><input type="checkbox" id="fmtH" checked> HTML page</label>
-    </div></fieldset>
-    <fieldset><legend>Forecaster</legend><input type="text" id="pubInit" maxlength="5" placeholder="Init" required></fieldset>
-    <div class="qc" id="qc"></div>
-    <div class="row"><button class="btn" value="cancel" formnovalidate>Cancel</button><button class="btn primary" id="pubGo" value="ok">Publish</button></div>
-  </form>
-</dialog>
+<dialog id="chkDlg"><div class="dlg">
+  <h2>Pre-submission check</h2><p class="sub" id="chkSum"></p>
+  <ul class="chkl" id="chkList"></ul>
+  <div class="actions" style="justify-content:flex-end"><button class="btn" id="chkCancel">Go back and fix</button><button class="btn primary" id="chkGo">Download anyway</button></div>
+</div></dialog>
 <div class="toast" id="toast"></div>
-<script src="guidance.js"></script>
-<script src="planning-app.js"></script>
-</body>
-</html>
+<script src="tfc-core.js"></script>
+<script src="tfc-template.js"></script>
+<script src="tfc-data.js"></script>
+<script>
+/* ============================================================
+   App
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const LS = { prefs:"tfc:v1:prefs", edits:"tfc:v1:edits", subs:"tfc:v1:subs", text:"tfc:v1:text" };
+const store = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e){ return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch (e){ /* storage unavailable */ } },
+};
+const prefs = Object.assign({ day:null, team:"", enabled:{}, weight:{}, skill:true, wmode:"skill", topN:0, bias:true, wPersist:3, wTaf:2, rules:{ ...DEFAULT_RULES }, el:"t", custom:{ icao:"", start:"" } }, store.get(LS.prefs, {}));
+{ const old = prefs.rules || {};
+  /* rules saved before the commissioner's answers are replaced (keeping the two settings he didn't address) */
+  prefs.rules = (old.version || 1) < 4 ? { ...DEFAULT_RULES } : Object.assign({ ...DEFAULT_RULES }, old); }
+if (prefs.skill === false && prefs.wmode === "skill") prefs.wmode = "equal";
+let edits = store.get(LS.edits, {});
+let subs = store.get(LS.subs, {});
+let texts = store.get(LS.text, {});
+const savePrefs = () => store.set(LS.prefs, prefs), saveEdits = () => store.set(LS.edits, edits), saveSubs = () => store.set(LS.subs, subs), saveTexts = () => store.set(LS.text, texts);
+
+const S = { blocks:[], stations:{}, obs:{}, taf:{}, clim:{}, climCache:{}, srcs:{}, skill:{}, recs:{}, status:{}, loading:false, cur:0, TL:null, popover:null };
+const FAM = { global:"Global models", regional:"Regional and high-resolution", ens:"Ensembles", mos:"MOS and LAMP", obs:"Observations and TAF" };
+const ALL_SRC = [...OM_DET, ...OM_ENS, ...MOS_MODELS.map(m => ({ ...m, fam:"mos" })), { id:"taf", name:"Official TAF", fam:"obs" }, { id:"persist", name:"Persistence (latest ob)", fam:"obs" }, { id:"clim", name:"Climatology", fam:"obs" }];
+
+/* ---------- day / block helpers ---------- */
+function currentDay(){
+  if (prefs.day === "custom"){
+    const c = prefs.custom || {}; const icaos = String(c.icao || "").toUpperCase().split(/[\s,]+/).filter(x => /^[A-Z0-9]{4}$/.test(x)).slice(0, 3);
+    const st = parseStart(c.start);
+    return { n:"C", title:"Custom forecast", suspense:null, blocks: icaos.map(i => [i, isFinite(st) ? new Date(st).toISOString().slice(0, 13) + "Z" : new Date(Math.ceil(Date.now()/H)*H + 6*H).toISOString().slice(0, 13) + "Z"]) };
+  }
+  const d = DAYS.find(x => String(x.n) === String(prefs.day)) || defaultDay();
+  return d;
+}
+/* "2026-10-28T06Z", "2026-10-28 0600Z", "2026-10-28T06:00", or "280600Z" (this month) */
+function parseStart(v){
+  v = String(v || "").trim().toUpperCase(); let m;
+  if ((m = v.match(/^(\d{4})-(\d{2})-(\d{2})[T ]?(\d{2}):?(\d{2})?Z?$/))) return Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +(m[5] || 0));
+  if ((m = v.match(/^(\d{2})(\d{2})(\d{2})?Z?$/))) return anchorDay(+m[1], +m[2], +(m[3] || 0), Date.now());
+  return NaN;
+}
+function defaultDay(){ const now = Date.now(); return DAYS.find(d => isoZ(d.suspense) > now - 6*H) || DAYS[DAYS.length - 1]; }
+const blockKey = b => `${b.icao}|${b.start}`;
+const hourLabel = (b, h) => `${p2(new Date(b.start + h*H).getUTCHours())}–${p2(new Date(b.start + (h + 1)*H).getUTCHours())}Z`;
+
+/* ---------- loading ---------- */
+async function loadDay(){
+  const day = currentDay();
+  S.blocks = day.blocks.map(([icao, st]) => ({ icao, start: isoZ(st) }));
+  const icaos = [...new Set([...S.blocks.map(b => b.icao), ...(day.outlook ? [day.outlook.icao] : [])])];
+  const endMs = Math.max(...S.blocks.map(b => b.start + 7*H), day.outlook ? Date.parse(day.outlook.from + "T00:00:00Z") + day.outlook.days*86400e3 : 0, Date.now() + 12*H);
+  S.TL = makeTimeline(Math.min(Date.now() - 50*H, ...S.blocks.map(b => b.start - 30*H)), endMs + 6*H);
+  S.loading = true; S.srcs = {}; S.recs = {}; S.status = {}; S.cur = Math.min(S.cur, S.blocks.length - 1);
+  renderAll();
+  const metas = {};
+  await Promise.all(icaos.map(async ic => { try { metas[ic] = await stationMeta(ic); } catch (e){ S.status["meta:" + ic] = "unknown station"; } }));
+  S.stations = metas;
+  const stList = icaos.filter(ic => metas[ic]).map(ic => metas[ic]);
+  icaos.forEach(ic => S.srcs[ic] = []);
+  const jobs = [];
+  icaos.forEach(ic => {
+    jobs.push(fetchObs(ic).then(r => { S.obs[ic] = r.obs; S.status["obs:" + ic] = `${r.obs.length} obs (${r.from})`; }).catch(e => { S.obs[ic] = S.obs[ic] || []; S.status["obs:" + ic] = "no observations"; }).finally(schedule));
+    jobs.push(fetchTAF(ic).then(r => { S.taf[ic] = r.taf; }).catch(() => { S.taf[ic] = null; }).finally(schedule));
+    jobs.push(fetchClim(ic).then(c => { S.clim[ic] = c; S.climCache = {}; }).catch(() => { S.clim[ic] = null; }).finally(schedule));
+    if (isUS(ic)) MOS_MODELS.forEach(def => jobs.push(fetchMOS(ic, def, S.TL).then(r => { if (r) S.srcs[ic].push({ def:{ ...def, fam:"mos" }, members:r.members, run:r.run }); }).catch(() => {}).finally(schedule)));
+  });
+  if (stList.length){
+    const om = (def, ens) => (DEMO ? demoOM(def, ens, stList, S.TL) : fetchOM(def, ens, stList, S.TL)).then(per => {
+      stList.forEach((st, si) => { const ms = per[si] || []; if (ms.length) S.srcs[st.icao].push({ def, members:ms }); });
+      S.status[def.id] = per.some(x => x && x.length) ? "ok" : "no data here";
+    }).catch(e => { S.status[def.id] = "not available"; }).finally(schedule);
+    OM_DET.forEach(d => jobs.push(om(d, false))); OM_ENS.forEach(d => jobs.push(om(d, true)));
+  }
+  await Promise.allSettled(jobs);
+  S.loading = false; S.loadedAt = Date.now(); schedule();
+}
+let schedT = null;
+function schedule(){ S.dataVer = (S.dataVer || 0) + 1; if (schedT) return; schedT = setTimeout(() => { schedT = null; computeAll(); renderAll(); }, 250); }
+
+/* ---------- skill and bias against recent observations ---------- */
+function srcValueAt(src, t){
+  const ss = src.members.map(m => sampleFromMember(m, S.TL, t, null)).filter(Boolean);
+  if (!ss.length) return null;
+  const mean = k => { const v = ss.map(s => s[k]).filter(x => x != null && isFinite(x)); return v.length ? v.reduce((a, b) => a + b, 0)/v.length : null; };
+  let u = 0, v = 0, n = 0; ss.forEach(s => { if (s.dir != null && s.spd != null){ u += Math.sin(s.dir*Math.PI/180); v += Math.cos(s.dir*Math.PI/180); n++; } });
+  return { t:mean("t"), td:mean("td"), spd:mean("spd"), dir: n ? (Math.atan2(u, v)*180/Math.PI + 360) % 360 : null };
+}
+/* quick deterministic value of a source for one hour (median / majority across members) */
+function srcCatAt(src, t){
+  const ss = src.members.map(m => sampleFromMember(m, S.TL, t, null)).filter(Boolean); if (!ss.length) return null;
+  const med = a => { a = a.filter(v => v != null).sort((x, y) => x - y); return a.length ? a[a.length >> 1] : undefined; };
+  const vis = med(ss.map(x => x.vis));
+  const cs = ss.map(x => x.ceil).filter(v => v !== undefined);
+  const ceil = cs.length ? (cs.filter(v => v === null).length > cs.length/2 ? null : med(cs)) : undefined;
+  const cnt = {}; let n = 0; ss.forEach(x => { if (!x.cats) return; n++; const c = [...x.cats].sort((a, b) => WX_RANK[b] - WX_RANK[a])[0] || ""; cnt[c] = (cnt[c] || 0) + 1; });
+  const wx = n ? Object.entries(cnt).sort((a, b) => b[1] - a[1])[0][0] : undefined;
+  return { vis: vis === undefined ? undefined : snapVis(vis), ceil, wx };
+}
+S.skillKey = {};
+function computeSkill(icao){
+  const key = [S.dataVer || 0, (S.obs[icao] || []).length, (S.srcs[icao] || []).length].join("|");
+  if (S.skillKey[icao] === key && S.skill[icao]){ applyFactors(icao); return; }
+  S.skillKey[icao] = key;
+  const obs = S.obs[icao] || [], out = {};
+  const now = Date.now(), from = Math.floor((now - 26*H)/H)*H;
+  const hours = []; for (let t = from; t < now - H; t += H){ const o = hourObs(obs, t); if (o) hours.push([t, o]); }
+  for (const src of S.srcs[icao] || []){
+    const e = { t:[], td:[], spd:[], dir:[] };
+    for (const [t, o] of hours){
+      const v = srcValueAt(src, t); if (!v) continue;
+      if (v.t != null && o.t != null) e.t.push(v.t - o.t);
+      if (v.td != null && o.td != null) e.td.push(v.td - o.td);
+      if (v.spd != null && o.spd != null) e.spd.push(v.spd - o.spd);
+      if (v.dir != null && typeof o.dir === "number" && o.spd >= 6) e.dir.push(angDiff(v.dir, o.dir));
+    }
+    const st = {};
+    for (const k in e){ const a = e[k]; if (a.length >= 6){ st[k] = { n:a.length, bias: k === "dir" ? null : a.reduce((x, y) => x + y, 0)/a.length, mae: a.reduce((x, y) => x + Math.abs(y), 0)/a.length }; } }
+    /* TFC points for visibility, ceiling and present weather */
+    const pts = { vis:[], ceil:[], wx:[] };
+    for (const [t, o] of hours){
+      const c = srcCatAt(src, t); if (!c) continue;
+      if (c.vis !== undefined && o.vis != null) pts.vis.push(scoreVis(c.vis, o.vis));
+      if (c.ceil !== undefined && o.ceil !== undefined) pts.ceil.push(scoreCeil(c.ceil == null ? "NONE" : p3(Math.round(c.ceil/100)), o.ceil, prefs.rules));
+      if (c.wx !== undefined) pts.wx.push(scoreWx(c.wx, o.cats, prefs.rules));
+    }
+    for (const k in pts){ const a = pts[k]; if (a.length >= 6) st[k] = { n:a.length, pts: a.reduce((x, y) => x + y, 0)/a.length }; }
+    out[src.def.id] = st;
+  }
+  /* skill factor per element, relative to the median source */
+  const sfac = {};
+  for (const k of ["t","td","spd","dir"]){
+    const maes = Object.values(out).map(s => s[k] && s[k].mae).filter(x => x != null).sort((a, b) => a - b);
+    const med = maes.length ? maes[maes.length >> 1] : null;
+    for (const id in out){ const m = out[id][k] && out[id][k].mae; (sfac[id] = sfac[id] || {})[k] = med != null && m != null ? clamp(Math.pow((med + 0.3)/(m + 0.3), 1.5), 0.3, 3) : 1; }
+  }
+  for (const k of ["vis","ceil","wx"]){
+    const ps = Object.values(out).map(s => s[k] && s[k].pts).filter(x => x != null).sort((a, b) => a - b);
+    const med = ps.length ? ps[ps.length >> 1] : null;
+    for (const id in out){ const p = out[id][k] && out[id][k].pts; (sfac[id] = sfac[id] || {})[k] = med != null && p != null ? clamp(Math.exp((p - med)/2), 0.3, 3) : 1; }
+  }
+  S.skill[icao] = { stats:out, sfac, fac:{}, nHours: hours.length };
+  applyFactors(icao);
+}
+/* competition history: average points per hour each source would have scored on graded days */
+function historyFactors(){
+  const tot = {}, n = {};
+  const idOf = name => (ALL_SRC.find(x => x.name === name) || {}).id;
+  for (const sb of Object.values(subs)){
+    const obs = S.obs[sb.icao]; if (!obs || !sb.alt) continue;
+    for (let i = 0; i < 6; i++){
+      const o = hourObs(obs, sb.start + i*H); if (!o) continue;
+      for (const [name, fc] of Object.entries(sb.alt)){
+        const id = idOf(name); if (!id) continue;
+        const g = gradeHour(fc[i], o, prefs.rules); const p = ELEMENTS.reduce((a, e) => a + (g[e.k] ?? 0), 0);
+        tot[id] = (tot[id] || 0) + p; n[id] = (n[id] || 0) + 1;
+      }
+    }
+  }
+  const avg = {}; for (const id in tot) if (n[id] >= 6) avg[id] = tot[id]/n[id];
+  const vals = Object.values(avg).sort((a, b) => a - b), med = vals.length ? vals[vals.length >> 1] : null;
+  const f = {}; for (const id in avg) f[id] = { fac: clamp(Math.exp((avg[id] - med)/6), 0.5, 2), avg: avg[id], hours: n[id] };
+  return f;
+}
+/* final per-element factors from the weighting mode; also picks the best N sources */
+function applyFactors(icao){
+  const sk = S.skill[icao]; if (!sk) return;
+  const hist = prefs.wmode === "skill+hist" ? historyFactors() : {};
+  sk.hist = hist; sk.fac = {};
+  for (const src of S.srcs[icao] || []){
+    const id = src.def.id, sf = (sk.sfac || {})[id] || {}, hf = hist[id] ? hist[id].fac : 1;
+    sk.fac[id] = {};
+    for (const k of ["t","td","spd","dir","vis","ceil","wx"]) sk.fac[id][k] = prefs.wmode === "equal" ? 1 : (sf[k] ?? 1)*hf;
+  }
+  const gm = id => { const f = sk.fac[id] || {}; const v = Object.values(f); return v.length ? Math.exp(v.reduce((a, x) => a + Math.log(x), 0)/v.length) : 1; };
+  sk.overall = Object.fromEntries((S.srcs[icao] || []).map(s => [s.def.id, gm(s.def.id)]));
+  const ranked = (S.srcs[icao] || []).map(s => s.def.id).filter(id => prefs.enabled[id] !== false).sort((a, b) => sk.overall[b]*(prefs.weight[b] ?? 1) - sk.overall[a]*(prefs.weight[a] ?? 1));
+  sk.excluded = new Set(prefs.topN > 0 ? ranked.slice(prefs.topN) : []);
+}
+
+/* ---------- climatology samples: same UTC hour, within 15 days of the date, all past years ---------- */
+const doyOf = ms => { const d = new Date(ms); return Math.floor((Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - Date.UTC(d.getUTCFullYear(), 0, 0))/86400e3); };
+const BITS = [[1, WX.LIQ], [2, WX.FZ], [4, WX.FROZ], [8, WX.LITH], [16, WX.NPH]];
+function climRecs(icao, t){
+  const c = S.clim[icao]; if (!c) return [];
+  const doy = doyOf(t), hr = new Date(t).getUTCHours(), key = `${icao}|${doy}|${hr}`;
+  if (S.climCache[key]) return S.climCache[key];
+  const out = [];
+  for (const r of c.recs){
+    if (r[1] !== hr) continue;
+    let dd = Math.abs(r[0] - doy); if (dd > 182) dd = 365 - dd; if (dd > 15) continue;
+    const cats = new Set(); BITS.forEach(([b, n]) => { if (r[7] & b) cats.add(n); });
+    out.push({ vis: r[3], ceil: r[4] == null ? undefined : r[4] < 0 ? null : r[4], spd: r[5], dir: r[6] == null ? null : r[6] < 0 ? null : r[6], cats, t:null, td:null, ct:r[8], ctd:r[9] });
+  }
+  return (S.climCache[key] = out);
+}
+
+/* ---------- samples and recommendations for one hour ---------- */
+const W = (id, icao) => {
+  if (prefs.enabled[id] === false) return 0;
+  const sk = icao && S.skill[icao]; if (sk && sk.excluded && sk.excluded.has(id)) return 0;
+  return prefs.weight[id] ?? 1;
+};
+function samplesFor(icao, t, onlyId){
+  const out = [];
+  const sk = S.skill[icao] || { fac:{}, stats:{} };
+  for (const src of S.srcs[icao] || []){
+    const id = src.def.id; if (onlyId && id !== onlyId) continue;
+    const w0 = onlyId ? 1 : W(id, icao); if (!w0) continue;
+    const st = sk.stats[id] || {};
+    const bias = prefs.bias ? { t: st.t ? st.t.bias*0.7 : 0, td: st.td ? st.td.bias*0.7 : 0, spd: st.spd ? st.spd.bias*0.6 : 0 } : null;
+    const f = !onlyId ? ((sk.fac || {})[id] || {}) : {};
+    const n = src.members.length;
+    for (const m of src.members){
+      const s = sampleFromMember(m, S.TL, t, { bias }); if (!s) continue;
+      const w = w0/n;
+      const wk = { t: w*(f.t ?? 1), td: w*(f.td ?? 1), spd: w*(f.spd ?? 1), dir: w*(f.dir ?? 1), vis: w*(f.vis ?? 1), ceil: w*(f.ceil ?? 1), wx: w*(f.wx ?? 1) };
+      if (s.mos){
+        const T = s.t, typ = s.mos.typ, cat = typ === "Z" ? WX.FZ : typ === "S" ? WX.FROZ : typ === "R" ? WX.LIQ : (T != null && T <= 0 ? WX.FROZ : WX.LIQ);
+        const pp = clamp(s.mos.pop, 0, 1);
+        const sc = (o, x) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, v*x]));
+        out.push({ ...s, cats:new Set([cat]), w: w*pp, wk: sc(wk, pp) });
+        out.push({ ...s, cats:new Set(), w: w*(1 - pp), wk: sc(wk, 1 - pp) });
+        continue;
+      }
+      out.push({ ...s, w, wk, src:id });
+    }
+  }
+  const taf = S.taf[icao];
+  if ((!onlyId || onlyId === "taf") && taf && (onlyId || W("taf", icao))){
+    const th = tafHour(taf, t);
+    if (th) th.forEach(x => out.push({ ...x, t:null, td:null, w: (onlyId ? 1 : W("taf", icao)*prefs.wTaf/2)*x.w }));
+  }
+  if ((!onlyId || onlyId === "clim") && (onlyId || W("clim", icao))){
+    const cr = climRecs(icao, t);
+    if (cr.length){ const w = (onlyId ? 1 : W("clim", icao))/cr.length; cr.forEach(x => out.push({ ...x, w, src:"clim" })); }
+  }
+  if ((!onlyId || onlyId === "persist") && (onlyId || W("persist", icao))){
+    const obs = S.obs[icao] || []; const last = obs[obs.length - 1];
+    if (last){
+      const lead = (t + H/2 - last.time)/H;
+      const w = (onlyId ? 1 : W("persist", icao)*prefs.wPersist)*Math.exp(-Math.max(0, lead)/2.5);
+      if (w > 0.01) out.push({ t:last.t, td:last.td, spd: last.spd == null ? null : Math.max(last.spd, last.gst || 0), dir: last.vrb ? null : last.dir, vis:last.vis, ceil:last.ceil, cats:last.cats, w });
+    }
+  }
+  return out;
+}
+function computeAll(){
+  for (const ic in S.srcs) computeSkill(ic);
+  for (const b of S.blocks){
+    const key = blockKey(b), rows = [];
+    for (let h = 0; h < 6; h++){
+      const t = b.start + h*H, sm = samplesFor(b.icao, t);
+      rows.push(sm.length ? optimizeHour(sm, prefs.rules) : {});
+    }
+    S.recs[key] = rows;
+  }
+}
+/* each source's own best forecast for a block (used in the guidance table and for grading comparisons) */
+function sourceForecast(b, id){
+  const rows = [];
+  for (let h = 0; h < 6; h++){ const sm = samplesFor(b.icao, b.start + h*H, id); const r = sm.length ? optimizeHour(sm, prefs.rules) : {}; rows.push(Object.fromEntries(ELEMENTS.map(e => [e.k, r[e.k] ? r[e.k].fmt : ""]))); }
+  return rows;
+}
+
+/* ---------- official values (recommendation unless edited) ---------- */
+function official(b){
+  const key = blockKey(b), rec = S.recs[key] || [], ed = edits[key] || {};
+  return Array.from({ length:6 }, (_, h) => Object.fromEntries(ELEMENTS.map(e => { const x = (ed[h] || {})[e.k]; return [e.k, x !== undefined ? x : rec[h] && rec[h][e.k] ? rec[h][e.k].fmt : ""]; })));
+}
+function validate(k, v){
+  v = String(v ?? "").trim().toUpperCase();
+  if (k === "wx"){ if (v === "NONE") return ""; return WX_LIST.includes(v) ? v : WX_LIST.find(x => x.toUpperCase() === v) ?? null; }
+  if (v === "") return "";
+  if (k === "dir"){ if (v === "VRB") return null; const n = parseInt(v, 10); if (!isFinite(n) || n < 0 || n > 360) return null; return p3(Math.round(n/10)*10); }
+  if (k === "spd"){ const n = parseInt(v, 10); return isFinite(n) && n >= 0 && n < 200 ? p2(n) : null; }
+  if (k === "vis"){ const n = parseInt(v, 10); if (!isFinite(n) || n < 0) return null; return String(n >= 9999 ? 9999 : n).padStart(4, "0"); }
+  if (k === "ceil"){ if (v === "NONE" || v === "-" || v === prefs.rules.noCeilCode) return prefs.rules.noCeilCode; const n = parseInt(v, 10); return isFinite(n) && n >= 0 && n < 999 ? p3(n) : null; }
+  if (k === "t" || k === "td"){ const n = parseTemp(v); return n == null ? null : fmtTemp(n); }
+  return v;
+}
+
+/* ============================================================
+   Rendering
+   ============================================================ */
+function renderAll(){ renderHeader(); renderTabs(); renderBlock(); renderSide(); renderClim(); renderGuidance(); renderMeteo(); renderSubmission(); renderOutlook(); renderGrades(); renderSources(); }
+function renderHeader(){
+  const day = currentDay();
+  $("daySel").innerHTML = DAYS.map(d => `<option value="${d.n}" ${String(d.n) === String(prefs.day ?? day.n) ? "selected" : ""}>Day ${d.n}: ${d.title} (${d.blocks.map(b => b[0]).join(", ")})</option>`).join("") + `<option value="custom" ${prefs.day === "custom" ? "selected" : ""}>Custom: any ICAO and time</option>`;
+  $("customRow").hidden = prefs.day !== "custom";
+  $("team").value = prefs.team || "";
+  const sus = day.suspense ? isoZ(day.suspense) : null;
+  if (sus){ const ms = sus - Date.now(); $("suspense").innerHTML = ms > 0 ? `Suspense <b>${new Date(sus).toISOString().slice(5, 16).replace("T", " ")}Z</b>, ${Math.floor(ms/H)} h ${Math.floor(ms % H/60000)} min left` : `Suspense passed (${new Date(sus).toISOString().slice(5, 16).replace("T", " ")}Z)`; $("suspense").classList.toggle("late", ms <= 0); }
+  else $("suspense").textContent = "";
+  const n = Object.values(S.status).filter(x => x === "ok").length;
+  $("live").textContent = DEMO ? "Demo data (synthetic)" : S.loading ? `Loading guidance, ${n} models in` : `${n} models loaded`;
+  $("banner").className = DEMO ? "banner show demo" : "banner"; $("banner").textContent = DEMO ? "Demo mode: every value is synthetic. Remove ?demo=1 from the address for real data." : "";
+}
+function renderTabs(){
+  $("tabs").innerHTML = S.blocks.map((b, i) => { const st = S.stations[b.icao]; return `<button type="button" data-i="${i}" aria-pressed="${i === S.cur}"><span class="n">${b.icao}</span><span class="p">${st ? st.name : "&nbsp;"}<br>${new Date(b.start).toISOString().slice(5, 10)} ${p2(new Date(b.start).getUTCHours())}–${p2(new Date(b.start + 6*H).getUTCHours())}Z</span></button>`; }).join("");
+}
+const evClass = (ev, max) => ev == null ? "" : ev >= max*0.66 ? "hi" : ev >= max*0.33 ? "mid" : "lo";
+function renderBlock(){
+  const b = S.blocks[S.cur]; if (!b){ $("block").innerHTML = ""; return; }
+  const key = blockKey(b), rec = S.recs[key] || [], off = official(b), ed = edits[key] || {};
+  const obs = S.obs[b.icao] || [];
+  let total = 0, maxT = 0;
+  let h = `<table class="fx"><thead><tr><th>Valid</th>${ELEMENTS.map(e => `<th>${e.label}<small>${e.sub}</small></th>`).join("")}<th>Expected</th></tr></thead><tbody>`;
+  for (let i = 0; i < 6; i++){
+    const r = rec[i] || {}, ob = hourObs(obs, b.start + i*H);
+    let rowEV = 0;
+    h += `<tr><th class="hr">Hr ${p2(i)}-${p2(i + 1)}<small>${hourLabel(b, i)}</small></th>`;
+    for (const e of ELEMENTS){
+      const v = off[i][e.k], R = r[e.k], isEd = (ed[i] || {})[e.k] !== undefined;
+      const ev = R && R.evf ? R.evf(v) : null; if (ev != null){ rowEV += ev; } maxT += e.max;
+      h += `<td class="cell ${evClass(ev, e.max)} ${isEd ? "ed" : ""}" data-h="${i}" data-k="${e.k}" title="${R ? "Expected points " + (ev ?? 0).toFixed(2) + " of " + e.max : "No guidance"}">${e.k === "wx" ? (v ? `<span class="wx">${v}</span>` : `<span class="none">none</span>`) : e.k === "ceil" && (v === "" || v === prefs.rules.noCeilCode) ? `<span class="none">none</span>` : (v || "<span class='none'>–</span>")}${ev != null ? `<i>${ev.toFixed(1)}</i>` : ""}</td>`;
+    }
+    total += rowEV;
+    h += `<td class="tot">${rowEV.toFixed(1)}</td></tr>`;
+    if (ob){
+      const g = gradeHour(off[i], ob, prefs.rules);
+      const obsTxt = { dir: ob.dir === "VRB" ? "VRB" : ob.dir == null ? "" : p3(ob.dir), spd: ob.spd == null ? "" : p2(ob.spd), vis: ob.vis == null ? "" : String(ob.vis).padStart(4, "0"), wx: ob.wx || "none", ceil: ob.ceil === undefined ? "" : ob.ceil === null ? "none" : p3(Math.round(ob.ceil/100)), t: fmtTemp(ob.t), td: fmtTemp(ob.td) };
+      const pts = ELEMENTS.reduce((a, e) => a + (g[e.k] ?? 0), 0);
+      h += `<tr class="obs"><th class="hr">Observed<small>${ob.n} ob${ob.n > 1 ? "s" : ""}</small></th>${ELEMENTS.map(e => `<td><span>${obsTxt[e.k]}</span><b class="${(g[e.k] ?? 0) > 0 ? "pos" : (g[e.k] ?? 0) < 0 ? "neg" : ""}">${g[e.k] == null ? "" : (g[e.k] > 0 ? "+" : "") + g[e.k]}</b></td>`).join("")}<td class="tot">${pts}</td></tr>`;
+    }
+  }
+  h += `</tbody></table>`;
+  $("block").innerHTML = h;
+  $("blockHead").innerHTML = `<h2>${b.icao} ${S.stations[b.icao] ? `<span>${S.stations[b.icao].name}</span>` : ""}</h2><div class="kv"><span>Valid <b>${new Date(b.start).toISOString().slice(0, 13).replace("T", " ")}Z to ${p2(new Date(b.start + 6*H).getUTCHours())}Z</b></span><span>Expected score <b>${total.toFixed(1)}</b> of ${maxT}</span><span>${Object.keys(ed).length ? `<button class="btn sm" id="resetBlock">Reset to recommendation</button>` : "All values from the optimizer"}</span></div>`;
+  const rb = $("resetBlock"); if (rb) rb.onclick = () => { delete edits[key]; saveEdits(); renderBlock(); renderSubmission(); };
+}
+function openPop(td){
+  closePop();
+  const b = S.blocks[S.cur], key = blockKey(b), i = +td.dataset.h, k = td.dataset.k;
+  const R = (S.recs[key] || [])[i] && S.recs[key][i][k], e = ELEMENTS.find(x => x.k === k), cur = official(b)[i][k];
+  const fmtAlt = v => k === "dir" ? p3(v) : k === "spd" ? p2(v) : k === "vis" ? String(v).padStart(4, "0") : k === "ceil" ? (v === "NONE" ? (prefs.rules.noCeilCode ? `${prefs.rules.noCeilCode} (no ceiling)` : "no ceiling (blank)") : p3(v)) : k === "wx" ? (v || "none") : fmtTemp(v);
+  const altVal = v => k === "ceil" && v === "NONE" ? prefs.rules.noCeilCode : k === "wx" ? v : fmtAlt(v).split(" ")[0];
+  const altLab = v => fmtAlt(v);
+  let h = `<div class="pophead"><b>${e.label}</b> ${hourLabel(b, i)}<button class="x" id="popX" aria-label="Close">×</button></div>`;
+  if (R){
+    h += `<div class="alts">${R.alts.map(a => `<button type="button" data-v="${altVal(a.v)}" class="${altVal(a.v) === cur ? "on" : ""}"><span>${fmtAlt(a.v)}</span><i>${a.ev.toFixed(2)}</i></button>`).join("")}</div>`;
+    if (k === "wx") h += `<div class="probs">${Object.entries(R.P).sort((a, b) => b[1] - a[1]).map(([c, p]) => `<span>${c || "none"} <b>${Math.round(p*100)}%</b></span>`).join("")}</div>`;
+    if (k === "ceil") h += `<div class="probs"><span>No ceiling <b>${Math.round(R.pNone*100)}%</b></span></div>`;
+    if (k === "dir") h += `<div class="probs"><span>Calm <b>${Math.round(R.pCalm*100)}%</b></span><span>Light/variable <b>${Math.round(R.pVrb*100)}%</b></span></div>`;
+  } else h += `<p class="mut">No guidance for this hour.</p>`;
+  h += k === "wx"
+    ? `<label class="own">Set<select id="popIn">${WX_LIST.map(x => `<option value="${x}" ${x === cur ? "selected" : ""}>${x || "none"}</option>`).join("")}</select></label>`
+    : `<label class="own">Set<input id="popIn" value="${cur}" autocomplete="off"></label>`;
+  h += `<div class="popfoot">Numbers are expected points under the TFC26 chart.${(edits[key] || {})[i] && edits[key][i][k] !== undefined ? ` <button class="btn sm" id="popReset">Use recommendation</button>` : ""}</div>`;
+  const pop = document.createElement("div"); pop.className = "pop"; pop.innerHTML = h; document.body.appendChild(pop);
+  const r = td.getBoundingClientRect(); pop.style.left = Math.min(window.innerWidth - 300, r.left + window.scrollX) + "px"; pop.style.top = (r.bottom + window.scrollY + 6) + "px";
+  S.popover = { pop, i, k, key };
+  const set = v => { const val = validate(k, v); if (val == null){ toast(`"${v}" isn't a valid ${e.label}`); return; } const rv = R ? R.fmt : null; edits[key] = edits[key] || {}; edits[key][i] = edits[key][i] || {}; if (val === rv) delete edits[key][i][k]; else edits[key][i][k] = val; if (!Object.keys(edits[key][i]).length) delete edits[key][i]; if (!Object.keys(edits[key]).length) delete edits[key]; saveEdits(); closePop(); renderBlock(); renderSubmission(); };
+  pop.querySelectorAll(".alts button").forEach(x => x.onclick = () => set(x.dataset.v));
+  const inp = $("popIn"); inp.focus(); if (inp.select) inp.select();
+  inp.addEventListener("keydown", ev => { if (ev.key === "Enter") set(inp.value); if (ev.key === "Escape") closePop(); });
+  if (inp.tagName === "SELECT") inp.onchange = () => set(inp.value);
+  $("popX").onclick = closePop;
+  const pr = $("popReset"); if (pr) pr.onclick = () => { delete edits[key][i][k]; if (!Object.keys(edits[key][i]).length) delete edits[key][i]; if (!Object.keys(edits[key]).length) delete edits[key]; saveEdits(); closePop(); renderBlock(); renderSubmission(); };
+}
+function closePop(){ if (S.popover){ S.popover.pop.remove(); S.popover = null; } }
+
+function renderSide(){
+  const b = S.blocks[S.cur]; if (!b){ $("obsList").innerHTML = ""; return; }
+  const obs = (S.obs[b.icao] || []).slice(-14).reverse();
+  $("obsList").innerHTML = obs.length ? obs.map(o => `<li class="${o.special ? "speci" : ""}"><span class="tm">${zstr(o.time)}</span><code>${o.raw.replace(/^(METAR|SPECI)\s+/, "")}</code></li>`).join("") : `<li class="mut">${S.loading ? "Loading" : "No recent observations found"}</li>`;
+  const taf = S.taf[b.icao];
+  $("tafBox").innerHTML = taf ? `<code>${taf.raw.replace(/\s(FM\d{6}|BECMG|TEMPO|PROB\d{2})/g, "\n  $1")}</code>` : `<span class="mut">${S.loading ? "Loading" : "No TAF found"}</span>`;
+  const sk = S.skill[b.icao];
+  const stats = sk ? Object.entries(sk.stats).filter(([, st]) => st.t || st.spd) : [];
+  stats.sort((a, b2) => ((a[1].t ? a[1].t.mae : 9) + (a[1].spd ? a[1].spd.mae/2 : 4)) - ((b2[1].t ? b2[1].t.mae : 9) + (b2[1].spd ? b2[1].spd.mae/2 : 4)));
+  const f = (x, bias) => x ? `${x.mae.toFixed(1)}${bias && x.bias != null ? `<small>${x.bias >= 0 ? "+" : ""}${x.bias.toFixed(1)}</small>` : ""}` : "–";
+  $("skill").innerHTML = stats.length ? `<table class="sk"><thead><tr><th>Source</th><th>Temp</th><th>Dew pt</th><th>Wind</th><th>Dir</th></tr></thead><tbody>${stats.slice(0, 14).map(([id, st]) => { const d = ALL_SRC.find(x => x.id === id); return `<tr><td>${d ? d.name : id}</td><td>${f(st.t, 1)}</td><td>${f(st.td, 1)}</td><td>${f(st.spd, 1)}</td><td>${st.dir ? Math.round(st.dir.mae) + "°" : "–"}</td></tr>`; }).join("")}</tbody></table><p class="mut">Mean absolute error over the last ${sk.nHours} observed hours, with bias (model minus observed) in small type. ${prefs.skill ? "Better-verifying models get more weight" : "Skill weighting is off"}${prefs.bias ? ", and recent bias is removed." : "."}</p>` : `<p class="mut">${S.loading ? "Waiting for models and observations" : "Not enough recent observations to verify the models."}</p>`;
+}
+
+/* climatology vs guidance for the valid window */
+const CLIM_EVENTS = [
+  ["Visibility below 5000 m", s => s.vis != null ? s.vis < 5000 : undefined],
+  ["Visibility below 1600 m", s => s.vis != null ? s.vis < 1600 : undefined],
+  ["Ceiling below 3000 ft", s => s.ceil !== undefined ? s.ceil != null && s.ceil < 3000 : undefined],
+  ["Ceiling below 1000 ft", s => s.ceil !== undefined ? s.ceil != null && s.ceil < 1000 : undefined],
+  ["No ceiling", s => s.ceil !== undefined ? s.ceil === null : undefined],
+  ["Calm or variable wind", s => s.spd != null ? (s.spd < 1 || s.dir == null) : undefined],
+  ["Wind or gust 20 kt or more", s => s.spd != null ? s.spd >= 20 : undefined],
+  ["Any precipitation", s => s.cats ? (s.cats.has(WX.LIQ) || s.cats.has(WX.FROZ) || s.cats.has(WX.FZ)) : undefined],
+  ["Snow / frozen precipitation", s => s.cats ? s.cats.has(WX.FROZ) : undefined],
+  ["Freezing precipitation", s => s.cats ? s.cats.has(WX.FZ) : undefined],
+  ["Fog or mist", s => s.cats ? s.cats.has(WX.NPH) : undefined],
+];
+function renderClim(){
+  const b = S.blocks[S.cur], box = $("climBox"); if (!b){ box.innerHTML = ""; return; }
+  const c = S.clim[b.icao];
+  if (!c){ box.innerHTML = `<p class="mut">${S.loading ? "Loading" : `No climatology for ${b.icao} yet. Run the "TFC climatology" workflow once (Actions tab); it builds every station on the watchlist.`}</p>`; return; }
+  const frac = (list, f) => { let w = 0, h = 0; for (const s of list){ const v = f(s); if (v === undefined) continue; w += s.w || 1; if (v) h += s.w || 1; } return w ? h/w : null; };
+  const cl = [], gd = [];
+  for (let i = 0; i < 6; i++){ const t = b.start + i*H; climRecs(b.icao, t).forEach(x => cl.push({ ...x, w:1 })); samplesFor(b.icao, t).filter(s => s.src !== "clim").forEach(x => gd.push(x)); }
+  const pc = v => v == null ? "–" : `${Math.round(v*100)}%`;
+  let h = `<table class="sk"><thead><tr><th>${hourLabel(b, 0).slice(0, 2)}–${hourLabel(b, 5).slice(3)} window</th><th>Climo</th><th>Guidance</th></tr></thead><tbody>`;
+  for (const [lab, f] of CLIM_EVENTS){
+    const a = frac(cl, f), g = frac(gd, f);
+    const flag = a != null && g != null && Math.abs(a - g) >= 0.25 ? (g > a ? "up" : "dn") : "";
+    h += `<tr><td>${lab}</td><td>${pc(a)}</td><td class="${flag}">${pc(g)}</td></tr>`;
+  }
+  h += `</tbody></table><p class="mut">${c.years.length} seasons (${c.years[0]}–${c.years[c.years.length - 1]}), ${cl.length} observed hours at the same UTC hours within 15 days of the date. Guidance values in color differ from climatology by 25 points or more; worth a second look either way.</p>`;
+  box.innerHTML = h;
+}
+
+/* guidance table: each source's own forecast for the selected element */
+function renderGuidance(){
+  const b = S.blocks[S.cur]; if (!b){ $("guide").innerHTML = ""; return; }
+  const k = prefs.el || "t";
+  $("elSel").innerHTML = ELEMENTS.map(e => `<button type="button" data-k="${e.k}" aria-pressed="${e.k === k}">${e.label}</button>`).join("");
+  const rows = [];
+  const ids = [...(S.srcs[b.icao] || []).map(s => s.def.id), ...(S.taf[b.icao] ? ["taf"] : []), ...((S.obs[b.icao] || []).length ? ["persist"] : []), ...(S.clim[b.icao] ? ["clim"] : [])];
+  for (const id of ids){ const fc = sourceForecast(b, id); if (fc.every(r => !r[k])) continue; rows.push([id, fc]); }
+  const off = official(b);
+  const famOrder = ["obs","mos","regional","global","ens"];
+  rows.sort((a, c) => famOrder.indexOf((ALL_SRC.find(x => x.id === a[0]) || {}).fam) - famOrder.indexOf((ALL_SRC.find(x => x.id === c[0]) || {}).fam));
+  let h = `<table class="gd"><thead><tr><th>Source</th>${[0,1,2,3,4,5].map(i => `<th>${hourLabel(b, i)}</th>`).join("")}<th>Weight</th></tr></thead><tbody>`;
+  h += `<tr class="off"><td>Your forecast</td>${off.map(r => `<td>${r[k] || "–"}</td>`).join("")}<td></td></tr>`;
+  for (const [id, fc] of rows){
+    const d = ALL_SRC.find(x => x.id === id), fac = (S.skill[b.icao] || { fac:{} }).fac[id];
+    const fk = fac ? fac[k] : null;
+    h += `<tr class="${W(id, b.icao) ? "" : "off2"}"><td>${d ? d.name : id}</td>${fc.map((r, i) => `<td class="${r[k] && r[k] === off[i][k] ? "match" : ""}">${r[k] === "" && k === "wx" ? "none" : r[k] || "–"}</td>`).join("")}<td>${W(id, b.icao) ? (fk != null ? `×${(W(id, b.icao)*fk).toFixed(1)}` : `×${W(id, b.icao)}`) : "off"}</td></tr>`;
+  }
+  h += `</tbody></table>`;
+  $("guide").innerHTML = h;
+}
+
+/* ---------- meteogram (observations against the blend) ---------- */
+function renderMeteo(){
+  const b = S.blocks[S.cur]; const svg = $("meteo"); if (!b){ svg.innerHTML = ""; return; }
+  const W0 = svg.clientWidth || 900, H0 = 300, L = 44, R = W0 - 12, T = 16, B = H0 - 26;
+  const t0 = b.start - 30*H, t1 = b.start + 12*H, x = t => L + (t - t0)/(t1 - t0)*(R - L);
+  const panels = [["Temperature and dew point (°C)", T, T + 100], ["Wind, max in hour (kt)", T + 118, T + 178], ["Ceiling (ft, log) and visibility", T + 196, B]];
+  let h = "";
+  /* window */
+  h += `<rect class="win" x="${x(b.start)}" y="${T - 6}" width="${x(b.start + 6*H) - x(b.start)}" height="${B - T + 6}"/>`;
+  h += `<line class="now" x1="${x(Date.now())}" x2="${x(Date.now())}" y1="${T - 6}" y2="${B}"/>`;
+  for (let t = Math.ceil(t0/(6*H))*6*H; t <= t1; t += 6*H) h += `<text class="ax" x="${x(t)}" y="${H0 - 8}" text-anchor="middle">${p2(new Date(t).getUTCHours())}Z ${new Date(t).getUTCDate()}</text><line class="g" x1="${x(t)}" x2="${x(t)}" y1="${T}" y2="${B}"/>`;
+  panels.forEach(([lab, a]) => h += `<text class="pl" x="${L}" y="${a - 3}">${lab}</text>`);
+  const hours = []; for (let t = Math.floor(t0/H)*H; t <= t1; t += H) hours.push(t);
+  /* blend quantiles per hour from all model samples */
+  const q = (arr, p) => { const a = arr.filter(v => v != null && isFinite(v)).sort((m, n) => m - n); if (!a.length) return null; const i = (a.length - 1)*p, lo = Math.floor(i); return a[lo] + (a[Math.min(a.length - 1, lo + 1)] - a[lo])*(i - lo); };
+  const series = hours.map(t => { const sm = samplesFor(b.icao, t).filter(s => s.t != null || s.spd != null); return { t, sm }; });
+  const obsH = hours.map(t => [t, hourObs(S.obs[b.icao] || [], t)]).filter(x => x[1]);
+  /* temperature panel */
+  const tv = []; series.forEach(s => s.sm.forEach(x => { if (x.t != null) tv.push(x.t); if (x.td != null) tv.push(x.td); })); obsH.forEach(([, o]) => { if (o.t != null) tv.push(o.t); if (o.td != null) tv.push(o.td); });
+  if (tv.length){
+    let lo = Math.floor(Math.min(...tv)) - 1, hi = Math.ceil(Math.max(...tv)) + 1; const yT = v => panels[0][2] - (v - lo)/(hi - lo)*(panels[0][2] - panels[0][1]);
+    for (const v of [lo, Math.round((lo + hi)/2), hi]) h += `<text class="ax" x="${L - 6}" y="${yT(v) + 4}" text-anchor="end">${v}</text><line class="g" x1="${L}" x2="${R}" y1="${yT(v)}" y2="${yT(v)}"/>`;
+    for (const [key, cls] of [["t","tt"],["td","td"]]){
+      const band = series.map(s => [s.t + H, q(s.sm.map(z => z[key]), 0.1), q(s.sm.map(z => z[key]), 0.5), q(s.sm.map(z => z[key]), 0.9)]).filter(r => r[2] != null);
+      if (band.length){ h += `<path class="band ${cls}" d="M${band.map(r => `${x(r[0])},${yT(r[3])}`).join("L")}L${band.slice().reverse().map(r => `${x(r[0])},${yT(r[1])}`).join("L")}Z"/>`; h += `<path class="med ${cls}" d="M${band.map(r => `${x(r[0])},${yT(r[2])}`).join("L")}"/>`; }
+      obsH.forEach(([t, o]) => { if (o[key] != null) h += `<circle class="ob ${cls}" cx="${x(t + 50*60e3)}" cy="${yT(o[key])}" r="2.6"/>`; });
+    }
+  }
+  /* wind panel */
+  const wv = []; series.forEach(s => s.sm.forEach(z => z.spd != null && wv.push(z.spd))); obsH.forEach(([, o]) => o.spd != null && wv.push(o.spd));
+  if (wv.length){
+    const hi = Math.max(10, Math.ceil(Math.max(...wv)/5)*5), yW = v => panels[1][2] - v/hi*(panels[1][2] - panels[1][1]);
+    for (const v of [0, hi/2, hi]) h += `<text class="ax" x="${L - 6}" y="${yW(v) + 4}" text-anchor="end">${v}</text><line class="g" x1="${L}" x2="${R}" y1="${yW(v)}" y2="${yW(v)}"/>`;
+    const band = series.map(s => [s.t + H, q(s.sm.map(z => z.spd), 0.1), q(s.sm.map(z => z.spd), 0.5), q(s.sm.map(z => z.spd), 0.9)]).filter(r => r[2] != null);
+    if (band.length){ h += `<path class="band ww" d="M${band.map(r => `${x(r[0])},${yW(r[3])}`).join("L")}L${band.slice().reverse().map(r => `${x(r[0])},${yW(r[1])}`).join("L")}Z"/><path class="med ww" d="M${band.map(r => `${x(r[0])},${yW(r[2])}`).join("L")}"/>`; }
+    obsH.forEach(([t, o]) => { if (o.spd != null) h += `<circle class="ob ww" cx="${x(t + 30*60e3)}" cy="${yW(o.spd)}" r="2.6"/>`; });
+  }
+  /* ceiling / vis panel: log scale 100 ft .. 10000 ft; vis drawn as m/2 on the same log axis */
+  const yC = v => { const a = Math.log10(100), c = Math.log10(12000); return panels[2][2] - (Math.log10(clamp(v, 100, 12000)) - a)/(c - a)*(panels[2][2] - panels[2][1]); };
+  for (const v of [200, 1000, 3000, 10000]) h += `<text class="ax" x="${L - 6}" y="${yC(v) + 4}" text-anchor="end">${v >= 1000 ? v/1000 + "k" : v}</text><line class="g" x1="${L}" x2="${R}" y1="${yC(v)}" y2="${yC(v)}"/>`;
+  const cband = series.map(s => [s.t + H, q(s.sm.map(z => z.ceil == null ? (z.ceil === null ? 12000 : null) : z.ceil), 0.25), q(s.sm.map(z => z.ceil == null ? (z.ceil === null ? 12000 : null) : z.ceil), 0.5)]).filter(r => r[2] != null);
+  if (cband.length) h += `<path class="med cc" d="M${cband.map(r => `${x(r[0])},${yC(r[2])}`).join("L")}"/><path class="med cc q" d="M${cband.map(r => `${x(r[0])},${yC(r[1])}`).join("L")}"/>`;
+  const vband = series.map(s => [s.t + H, q(s.sm.map(z => z.vis), 0.5)]).filter(r => r[1] != null);
+  if (vband.length) h += `<path class="med vv" d="M${vband.map(r => `${x(r[0])},${yC(r[1]*1.2)}`).join("L")}"/>`;
+  obsH.forEach(([t, o]) => { if (o.ceil !== undefined) h += `<rect class="ob cc" x="${x(t + 30*60e3) - 2.5}" y="${yC(o.ceil === null ? 12000 : o.ceil) - 2.5}" width="5" height="5"/>`; if (o.vis != null) h += `<circle class="ob vv" cx="${x(t + 30*60e3)}" cy="${yC(o.vis*1.2)}" r="2.4"/>`; });
+  svg.setAttribute("viewBox", `0 0 ${W0} ${H0}`); svg.innerHTML = h;
+}
+
+/* ---------- submission ---------- */
+function renderSubmission(){
+  const day = currentDay(), dk = String(day.n);
+  const tx = texts[dk] = texts[dk] || { mc:["","","","",""], sa:"", date:"" };
+  $("mc").innerHTML = [0,1,2,3,4].map(i => `<label>Q${i + 1}<select data-q="${i}">${["","A","B","C","D"].map(o => `<option ${tx.mc[i] === o ? "selected" : ""}>${o}</option>`).join("")}</select></label>`).join("");
+  if (document.activeElement !== $("sa")) $("sa").value = tx.sa || defaultSA(day);
+  $("saCount").textContent = `${(($("sa").value.trim().match(/\S+/g)) || []).length} words`;
+  if (document.activeElement !== $("subDate")) $("subDate").value = tx.date || new Date().toISOString().slice(0, 10);
+  $("fname").textContent = fileName();
+  const missing = []; if (!prefs.team) missing.push("team name"); if (tx.mc.some(x => !x)) missing.push("multiple-choice answers");
+  S.blocks.forEach(b => { const o = official(b); if (o.some(r => ELEMENTS.some(e => e.k !== "wx" && !r[e.k]))) missing.push(`blank cells in ${b.icao}`); });
+  $("subCheck").innerHTML = missing.length ? `Still to fill: ${missing.join(", ")}.` : "Ready to submit.";
+  $("subCheck").className = missing.length ? "chk warn" : "chk ok";
+}
+function defaultSA(day){
+  if (day.n === 2) return "To: J2 (A39T) Intelligence Cell\nFrom: [Team Name] Weather Flight Cell\nDate/Time Submitted: [DTG]\nNLT Response Needed By: Friday, 23 October @ 1500Z\n\n1. Customer's Requirement:\n\n2. Specific Assets:\n\n3. Environmental Conditions Requested:\n\n4. Justification:\n";
+  return "";
+}
+const fileName = () => `${(prefs.team || "TEAMNAME").replace(/[^A-Za-z0-9-]/g, "")}_TFC26_${S.blocks[0] ? S.blocks[0].icao : "ICAO"}_${p2(currentDay().n === "C" ? 0 : currentDay().n)}.xlsx`;
+
+/* fill the competition workbook (template text kept exactly; only the entry cells change) */
+const xesc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+function setCell(xml, ref, val){
+  const re = new RegExp(`<c r="${ref}"( s="\\d+")?(?: t="\\w+")?\\s*(?:/>|>.*?</c>)`);
+  const m = xml.match(re);
+  const sAttr = m && m[1] ? m[1] : "";
+  const cell = val === "" || val == null ? `<c r="${ref}"${sAttr}/>` : `<c r="${ref}"${sAttr} t="inlineStr"><is><t xml:space="preserve">${xesc(val)}</t></is></c>`;
+  if (m) return xml.replace(re, cell);
+  /* cell not in the template row: insert it in column order */
+  const row = ref.match(/\d+/)[0];
+  return xml.replace(new RegExp(`(<row r="${row}"[^>]*>)(.*?)(</row>)`), (all, a, mid, c) => a + mid + cell + c);
+}
+function buildWorkbook(){
+  const day = currentDay(), tx = texts[String(day.n)] || { mc:[], sa:"" };
+  let x = TFC_TEMPLATE["xl/worksheets/sheet1.xml"];
+  const date = (tx.date || new Date().toISOString().slice(0, 10));
+  const d = new Date(date + "T00:00:00Z"); const ds = isFinite(d) ? `${p2(d.getUTCDate())} ${["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"][d.getUTCMonth()]} ${d.getUTCFullYear()}` : date;
+  x = setCell(x, "B3", ds); x = setCell(x, "B4", prefs.team || "");
+  const BL = [{ icao:"B5", r0:2 }, { icao:"B12", r0:13 }, { icao:"B23", r0:24 }];
+  const cols = { dir:"E", spd:"F", vis:"G", wx:"H", ceil:"I", t:"J", td:"K" };
+  S.blocks.slice(0, 3).forEach((b, bi) => {
+    x = setCell(x, BL[bi].icao, b.icao);
+    official(b).forEach((r, i) => { for (const e of ELEMENTS){ let v = r[e.k] || ""; if (e.k === "wx" && !v) v = prefs.rules.wxNoneCode || ""; x = setCell(x, cols[e.k] + (BL[bi].r0 + i), v); } });
+  });
+  ["O","P","Q","R","S"].forEach((c, i) => x = setCell(x, c + "3", (tx.mc || [])[i] || ""));
+  if (tx.sa && tx.sa.trim()) x = setCell(x, "M8", "Short Answer / RFI / CC Brief:\n" + tx.sa.trim());
+  const files = Object.entries(TFC_TEMPLATE).map(([n, t]) => [n, n === "xl/worksheets/sheet1.xml" ? x : t]);
+  return zip(files);
+}
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++){ let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(b){ let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function zip(files){
+  const enc = new TextEncoder(), parts = [], central = []; let off = 0;
+  for (const [name, text] of files){
+    const nb = enc.encode(name), data = enc.encode(text), crc = crc32(data);
+    const lh = new DataView(new ArrayBuffer(30)); lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, nb.length, true);
+    parts.push(new Uint8Array(lh.buffer), nb, data);
+    const ch = new DataView(new ArrayBuffer(46)); ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint32(16, crc, true); ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, nb.length, true); ch.setUint32(42, off, true);
+    central.push(new Uint8Array(ch.buffer), nb); off += 30 + nb.length + data.length;
+  }
+  const csz = central.reduce((a, b) => a + b.length, 0), end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, csz, true); end.setUint32(16, off, true);
+  return new Blob([...parts, ...central, new Uint8Array(end.buffer)], { type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+}
+function download(blob, name){ const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
+/* ---------- pre-submission check ---------- */
+function runChecks(){
+  const day = currentDay(), tx = texts[String(day.n)] || { mc:[], sa:"" }, out = [];
+  const add = (lvl, msg) => out.push({ lvl, msg });
+  if (!prefs.team) add("err", "Team name is blank; it goes in the workbook and the file name.");
+  if (day.suspense){ const ms = isoZ(day.suspense) - Date.now(); if (ms < 0) add("err", "The suspense has passed; late submissions score zero."); else if (ms < 45*60e3) add("info", `${Math.round(ms/60e3)} minutes to the suspense.`); }
+  if (!S.loadedAt || Date.now() - S.loadedAt > 2*H) add("warn", `Guidance and observations were loaded ${S.loadedAt ? Math.round((Date.now() - S.loadedAt)/60e3) + " minutes" : "a while"} ago. Press Refresh data for the latest runs and METARs.`);
+  if (!Object.values(S.status).some(v => v === "ok")) add("err", "No model guidance loaded.");
+  for (const b of S.blocks){
+    const off = official(b), rec = S.recs[blockKey(b)] || [], ed = edits[blockKey(b)] || {};
+    off.forEach((r, i) => {
+      const at = `${b.icao} Hr ${p2(i)}-${p2(i + 1)}`;
+      for (const e of ELEMENTS){
+        const v = r[e.k];
+        if (e.k !== "wx" && !(e.k === "ceil" && prefs.rules.noCeilCode === "") && !v) add("err", `${at}: ${e.label} is blank.`);
+        else if (v && validate(e.k, v) !== v) add("err", `${at}: ${e.label} "${v}" isn't in the required format.`);
+        const R = rec[i] && rec[i][e.k];
+        if (R && (ed[i] || {})[e.k] !== undefined){ const loss = R.ev - (R.evf(v) ?? 0); if (loss > 0.75) add("warn", `${at}: your ${e.label} ${v || "none"} is worth ${loss.toFixed(1)} fewer expected points than the recommended ${R.fmt || "none"}. Keep it only if you know something the guidance doesn't.`); }
+      }
+      const T = parseTemp(r.t), Td = parseTemp(r.td), vis = +r.vis, wx = r.wx, cg = r.ceil;
+      if (T != null && Td != null && Td > T) add("err", `${at}: dew point ${r.td} is above temperature ${r.t}.`);
+      if (r.dir === "000" && +r.spd > 0) add("warn", `${at}: direction 000 (calm) with ${r.spd} kt.`);
+      if (r.spd === "00" && r.dir && r.dir !== "000") add("warn", `${at}: calm wind should be 000 for direction.`);
+      if (isFinite(vis) && vis < 1000 && !wx) add("warn", `${at}: visibility ${r.vis} m with no present weather; an observer would report fog or precipitation.`);
+      if (wx === WX.NPH && vis >= 9999) add("warn", `${at}: mist/fog with 9999 m visibility is rarely reported.`);
+      if (wx === WX.LITH && vis >= 9999) add("warn", `${at}: haze or smoke with 9999 m visibility is rarely reported.`);
+      if (T != null && wx === WX.LIQ && T <= -3) add("warn", `${at}: liquid precipitation at ${r.t} °C; check for snow or freezing precipitation.`);
+      if (T != null && wx === WX.FROZ && T >= 5) add("warn", `${at}: frozen precipitation at ${r.t} °C.`);
+      if (T != null && wx === WX.FZ && (T >= 2 || T <= -12)) add("warn", `${at}: freezing precipitation at ${r.t} °C. A wrong freezing call costs 2 points.`);
+      const Rh = rec[i] && rec[i].wx; if (Rh && Rh.P && Rh.P[WX.FZ] >= 0.2 && wx !== WX.FZ) add("warn", `${at}: ${Math.round(Rh.P[WX.FZ]*100)}% chance of freezing precipitation but Freezing isn't forecast. Missing it costs 2 points whatever you enter.`);
+      if (cg && cg !== prefs.rules.noCeilCode && +cg <= 3 && vis >= 9999) add("warn", `${at}: ceiling ${cg} with 9999 m visibility.`);
+    });
+  }
+  const mcMissing = (tx.mc || []).filter(x => !x).length; if (mcMissing) add("warn", `${mcMissing} multiple-choice answer${mcMissing > 1 ? "s" : ""} blank (1 point each).`);
+  const words = ((tx.sa || "").trim().match(/\S+/g) || []).length;
+  if (!words) add("warn", day.n === 2 ? "The RFI to J2 is blank (3 points, and it unlocks the asset thresholds for Day 3)." : day.n === 3 ? "The commander briefing is blank (4 points)." : "The short answer is blank.");
+  if (day.n === 2 && words && !/1\. Customer/i.test(tx.sa)) add("warn", "The RFI doesn't follow the Annex B format (Customer's Requirement, Specific Assets, Environmental Conditions Requested, Justification).");
+  if (day.n === 3 && words > 250) add("err", `The commander briefing is ${words} words; the limit is 250.`);
+  if (day.n === 3 && !S.outlookSaved) add("info", "The Three-Day ETAR Outlook goes as a separate file. Download it from the Outlook panel and attach it to the email.");
+  if (day.suspense && isoZ(day.suspense) - Date.now() > 3*H) add("info", "The commissioner takes the latest workbook you send, so send a safety copy now and a final one closer to the suspense with the newest guidance.");
+  if (!prefs.rules.confirmed) add("info", "The scoring assumptions aren't marked as confirmed by A39T, so the optimizer is using defaults for blank weather and no-ceiling cases.");
+  return out;
+}
+function showChecks(onGo){
+  const list = runChecks(), dlg = $("chkDlg");
+  const errs = list.filter(x => x.lvl === "err").length, warns = list.filter(x => x.lvl === "warn").length;
+  $("chkSum").textContent = !list.length ? "Everything checks out." : `${errs} problem${errs === 1 ? "" : "s"}, ${warns} warning${warns === 1 ? "" : "s"}.`;
+  $("chkList").innerHTML = list.length ? list.sort((a, b) => ["err","warn","info"].indexOf(a.lvl) - ["err","warn","info"].indexOf(b.lvl)).map(x => `<li class="${x.lvl}">${x.msg}</li>`).join("") : `<li class="ok">No issues found. The file name will be ${fileName()}.</li>`;
+  $("chkGo").textContent = onGo ? (list.length ? "Download anyway" : "Download workbook") : "Close";
+  $("chkGo").onclick = () => { dlg.close(); if (onGo) onGo(); };
+  dlg.showModal();
+}
+
+/* save what was submitted, plus every source's own forecast, so the day can be graded later */
+function saveSubmission(){
+  const day = currentDay();
+  for (const b of S.blocks){
+    const key = `${day.n}|${blockKey(b)}`;
+    const alt = { "Optimizer (unedited)": (S.recs[blockKey(b)] || []).map(r => Object.fromEntries(ELEMENTS.map(e => [e.k, r[e.k] ? r[e.k].fmt : ""]))) };
+    for (const src of S.srcs[b.icao] || []) alt[src.def.name] = sourceForecast(b, src.def.id);
+    if (S.taf[b.icao]) alt["Official TAF"] = sourceForecast(b, "taf");
+    if ((S.obs[b.icao] || []).length) alt["Persistence"] = sourceForecast(b, "persist");
+    if (S.clim[b.icao]) alt["Climatology"] = sourceForecast(b, "clim");
+    subs[key] = { day:day.n, icao:b.icao, start:b.start, team:prefs.team, saved:Date.now(), fc: official(b), alt };
+  }
+  saveSubs(); renderGrades();
+}
+
+/* ---------- grading ---------- */
+async function renderGrades(){
+  const list = Object.entries(subs).sort((a, b) => a[1].start - b[1].start);
+  if (!list.length){ $("grades").innerHTML = `<p class="mut">Nothing saved yet. Downloading the workbook (or pressing Save submission) stores the forecast here so it can be graded once the observations are in.</p>`; return; }
+  let h = "";
+  for (const [key, sb] of list){
+    const obs = S.obs[sb.icao];
+    if (!obs){ h += `<div class="gr"><h3>Day ${sb.day}: ${sb.icao} ${new Date(sb.start).toISOString().slice(5, 13).replace("T", " ")}Z</h3><button class="btn sm" data-loadobs="${sb.icao}">Load observations to grade</button> <button class="btn sm ghost" data-del="${key}">Remove</button></div>`; continue; }
+    const hrs = [0,1,2,3,4,5].map(i => hourObs(obs, sb.start + i*H));
+    const nObs = hrs.filter(Boolean).length;
+    const score = fc => { const t = {}; let tot = 0; hrs.forEach((o, i) => { if (!o) return; const g = gradeHour(fc[i], o, prefs.rules); for (const e of ELEMENTS){ t[e.k] = (t[e.k] || 0) + (g[e.k] ?? 0); tot += g[e.k] ?? 0; } }); return { t, tot }; };
+    const mine = score(sb.fc);
+    const comps = Object.entries(sb.alt || {}).map(([n, fc]) => [n, score(fc)]).sort((a, b) => b[1].tot - a[1].tot);
+    h += `<div class="gr"><h3>Day ${sb.day}: ${sb.icao} ${new Date(sb.start).toISOString().slice(5, 13).replace("T", " ")}Z <span>${nObs} of 6 hours observed</span> <button class="btn sm ghost" data-del="${key}">Remove</button></h3>`;
+    if (!nObs){ h += `<p class="mut">No observations for the valid window yet.</p></div>`; continue; }
+    h += `<table class="gt"><thead><tr><th></th>${ELEMENTS.map(e => `<th>${e.label}</th>`).join("")}<th>Total</th></tr></thead><tbody>`;
+    h += `<tr class="me"><td>Submitted</td>${ELEMENTS.map(e => `<td>${mine.t[e.k] ?? 0}</td>`).join("")}<td><b>${mine.tot}</b></td></tr>`;
+    comps.slice(0, 12).forEach(([n, s]) => h += `<tr class="${s.tot > mine.tot ? "beat" : ""}"><td>${n}</td>${ELEMENTS.map(e => `<td>${s.t[e.k] ?? 0}</td>`).join("")}<td>${s.tot}</td></tr>`);
+    h += `</tbody></table></div>`;
+  }
+  h += `<p class="mut">Grading uses the METAR/SPECI reports in each hour as described under Scoring assumptions. Rows in bold beat your submission, which helps pick the sources to trust at the next station.</p>`;
+  $("grades").innerHTML = h;
+}
+async function loadObsFor(icao){ try { const r = await fetchObs(icao); S.obs[icao] = r.obs; } catch (e){ toast("Couldn't load observations for " + icao); } renderGrades(); }
+
+/* workbook import (DecompressionStream), to grade a sheet made elsewhere */
+async function readZip(buf){
+  const dv = new DataView(buf), u8 = new Uint8Array(buf); let e = buf.byteLength - 22; while (e > 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+  const n = dv.getUint16(e + 10, true); let p = dv.getUint32(e + 16, true); const out = {};
+  for (let k = 0; k < n; k++){
+    const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true), nlen = dv.getUint16(p + 28, true), xlen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true), loc = dv.getUint32(p + 42, true);
+    const name = new TextDecoder().decode(u8.slice(p + 46, p + 46 + nlen)); p += 46 + nlen + xlen + clen;
+    const lnl = dv.getUint16(loc + 26, true), lxl = dv.getUint16(loc + 28, true), data = u8.slice(loc + 30 + lnl + lxl, loc + 30 + lnl + lxl + csize);
+    if (method === 0) out[name] = new TextDecoder().decode(data);
+    else { const ds = new DecompressionStream("deflate-raw"); const txt = await new Response(new Blob([data]).stream().pipeThrough(ds)).text(); out[name] = txt; }
+  }
+  return out;
+}
+async function importWorkbook(file){
+  if (typeof DecompressionStream === "undefined"){ toast("This browser can't read workbooks; use Chrome or Edge"); return; }
+  const files = await readZip(await file.arrayBuffer());
+  const ss = (files["xl/sharedStrings.xml"] || "").match(/<si>[\s\S]*?<\/si>/g) || [];
+  const strs = ss.map(s => (s.match(/<t[^>]*>([\s\S]*?)<\/t>/g) || []).map(t => t.replace(/<[^>]+>/g, "")).join(""));
+  const sheet = files["xl/worksheets/sheet1.xml"]; const cells = {};
+  (sheet.match(/<c r="[A-Z]+\d+"[^>]*?(?:\/>|>[\s\S]*?<\/c>)/g) || []).forEach(c => {
+    const ref = c.match(/r="([A-Z]+\d+)"/)[1]; const t = (c.match(/ t="(\w+)"/) || [])[1];
+    let v = (c.match(/<v>([\s\S]*?)<\/v>/) || [])[1]; const is = (c.match(/<is>([\s\S]*?)<\/is>/) || [])[1];
+    if (t === "s" && v != null) v = strs[+v]; else if (is) v = is.replace(/<[^>]+>/g, "");
+    if (v != null) cells[ref] = String(v).replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+  });
+  const fname = file.name.match(/_(\d{2})\.xlsx$/i); const dayN = fname ? +fname[1] : null;
+  const day = DAYS.find(d => d.n === dayN) || currentDay();
+  const cols = { dir:"E", spd:"F", vis:"G", wx:"H", ceil:"I", t:"J", td:"K" };
+  let added = 0;
+  [{ c:"B5", r0:2 }, { c:"B12", r0:13 }, { c:"B23", r0:24 }].forEach((bl, bi) => {
+    const icao = (cells[bl.c] || "").trim().slice(0, 4).toUpperCase(); const blk = day.blocks[bi];
+    const ic = /^[A-Z]{4}$/.test(icao) ? icao : blk ? blk[0] : null; if (!ic) return;
+    const st = blk && blk[0] === ic ? isoZ(blk[1]) : (day.blocks.find(x => x[0] === ic) ? isoZ(day.blocks.find(x => x[0] === ic)[1]) : null); if (!st) return;
+    const fc = [0,1,2,3,4,5].map(i => Object.fromEntries(ELEMENTS.map(e => { let v = (cells[cols[e.k] + (bl.r0 + i)] || "").trim(); if (e.k === "wx" && /^none$/i.test(v)) v = ""; return [e.k, v]; })));
+    if (fc.every(r => ELEMENTS.every(e => !r[e.k]))) return;
+    subs[`${day.n}|${ic}|${st}`] = { day:day.n, icao:ic, start:st, team:cells.B4 || "", saved:Date.now(), fc, alt:{}, imported:file.name }; added++;
+  });
+  saveSubs(); toast(`Imported ${added} forecast${added === 1 ? "" : "s"} from ${file.name}`); renderGrades();
+}
+
+/* ---------- Day 3 ETAR outlook helper ---------- */
+function renderOutlook(){
+  const day = currentDay(), box = $("outlookCard");
+  if (!day.outlook){ box.hidden = true; return; }
+  box.hidden = false;
+  const ic = day.outlook.icao, start = Date.parse(day.outlook.from + "T00:00:00Z");
+  if (!(S.srcs[ic] || []).length){ $("outlookTxt").value = $("outlookTxt").value || ""; $("outlookNote").textContent = S.loading ? "Loading ETAR guidance" : "No ETAR guidance loaded"; return; }
+  const lines = [];
+  const pct = x => Math.round(x*100);
+  for (let d = 0; d < day.outlook.days; d++){
+    const a = start + d*86400e3, hours = []; for (let t = a; t < a + 24*H; t += H) hours.push(samplesFor(ic, t).filter(s => s.cats || s.t != null));
+    const flat = hours.flat(); const tw = flat.reduce((s, x) => s + x.w, 0) || 1;
+    const P = f => flat.reduce((s, x) => s + (f(x) ? x.w : 0), 0)/tw;
+    const anyH = f => Math.max(...hours.map(hs => { const w = hs.reduce((s, x) => s + x.w, 0) || 1; return hs.reduce((s, x) => s + (f(x) ? x.w : 0), 0)/w; }));
+    const ceilLow = P(x => x.ceil != null && x.ceil < 1000), ceilAny = P(x => x.ceil != null && x.ceil < 3000);
+    const rain = anyH(x => x.cats && x.cats.has(WX.LIQ)), snow = anyH(x => x.cats && x.cats.has(WX.FROZ)), fz = anyH(x => x.cats && x.cats.has(WX.FZ));
+    const fog = anyH(x => x.vis != null && x.vis < 1000), gust = flat.map(x => x.spd).filter(v => v != null).sort((m, n) => m - n);
+    const g90 = gust.length ? gust[Math.floor(gust.length*0.9)] : null;
+    const ts = Math.max(...hours.map((hs, k) => { const sm = (S.srcs[ic] || []).flatMap(src => src.members.map(m => m.wc ? m.wc[S.TL.idx(a + k*H + H)] : undefined)).filter(v => v != null); return sm.length ? sm.filter(v => v >= 95).length/sm.length : 0; }));
+    const temps = flat.map(x => x.t).filter(v => v != null).sort((m, n) => m - n);
+    const sky = ceilLow > 0.4 ? "Low ceilings (below 1,000 ft) much of the day" : ceilAny > 0.5 ? "Mostly cloudy with ceilings 1,000–3,000 ft at times" : ceilAny > 0.25 ? "Variable cloud, occasional ceilings below 3,000 ft" : "Mostly scattered cloud or better";
+    const wx = [rain > 0.15 ? `rain ${pct(rain)}%` : "", snow > 0.1 ? `snow ${pct(snow)}%` : "", fz > 0.05 ? `freezing precipitation ${pct(fz)}%` : "", ts > 0.05 ? `thunderstorms ${pct(ts)}%` : ""].filter(Boolean).join(", ") || "precipitation unlikely";
+    const hz = [fog > 0.15 ? `fog/visibility below 1,000 m (${pct(fog)}% at worst hour)` : "", g90 != null && g90 >= 25 ? `gusts to ${Math.round(g90)} kt` : "", fz > 0.05 || (temps.length && temps[Math.floor(temps.length*0.1)] <= 0) ? "icing/frost risk" : ""].filter(Boolean).join("; ") || "no significant hazards expected";
+    lines.push(`T+${3 + d} ${new Date(a).toUTCString().slice(0, 11)}: ${sky}. Precipitation/convection: ${wx}. Hazards: ${hz}. Temperatures ${temps.length ? `${fmtTemp(temps[Math.floor(temps.length*0.1)])} to ${fmtTemp(temps[Math.floor(temps.length*0.9)])} °C` : "n/a"}. Planning implications: [your assessment for Sable-6 / Raven-4 and JTF operations].`);
+  }
+  if (day.outlook.callout){
+    const a = isoZ(day.outlook.callout[0]), b = isoZ(day.outlook.callout[1]); const rs = []; for (let t = a; t < b; t += H){ const sm = samplesFor(ic, t); if (sm.length) rs.push(optimizeHour(sm, prefs.rules)); }
+    if (rs.length){ const g = k => rs.map(r => r[k] ? r[k].fmt : "").filter(Boolean); const ce = g("ceil"), vi = g("vis"), sp = g("spd"), dr = g("dir"), w = g("wx").filter(Boolean);
+      lines.push(`T+5 callout, ${new Date(a).toUTCString().slice(0, 11)} ${p2(new Date(a).getUTCHours())}00–${p2(new Date(b).getUTCHours())}00Z: most likely ceiling ${ce.join("/")} (hundreds ft), visibility ${vi.join("/")} m, wind ${dr[0] || "---"} at up to ${Math.max(...sp.map(Number))} kt${w.length ? `, ${[...new Set(w)].join("/")} precipitation possible` : ""}. Impacts: [Sable-6 EO/IR line of sight and mobility; Raven-4 launch/recovery and collection].`); }
+  }
+  $("outlookNote").textContent = "Draft generated from the blend; edit before sending. The asset impacts need the J2 thresholds from the Day 2 RFI.";
+  if (!$("outlookTxt").dataset.edited) $("outlookTxt").value = lines.join("\n\n");
+}
+
+/* ---------- sources & settings ---------- */
+const FAMTAG = { global:"Global", regional:"Regional", ens:"Ensemble", mos:"MOS", obs:"Obs" };
+function renderSources(){
+  const b = S.blocks[S.cur]; const ic = b ? b.icao : null, sk = ic ? S.skill[ic] : null;
+  const have = new Map(ic ? (S.srcs[ic] || []).map(s => [s.def.id, s]) : []);
+  if (ic && S.taf[ic]) have.set("taf", true); if (ic && (S.obs[ic] || []).length) have.set("persist", true); if (ic && S.clim[ic]) have.set("clim", true);
+  const eff = id => { if (!have.has(id)) return 0; const w = W(id, ic); if (!w) return 0; const o = sk && sk.overall && sk.overall[id] != null ? sk.overall[id] : 1; return w*o*(id === "taf" ? prefs.wTaf/2 : id === "persist" ? 0 : 1); };
+  const tot = ALL_SRC.reduce((a, s) => a + eff(s.id), 0) || 1;
+  const rows = ALL_SRC.slice().sort((x, y) => (have.has(y.id) - have.has(x.id)) || (eff(y.id) - eff(x.id)));
+  const chip = (st, k, lab, unit) => { const v = st && st[k]; if (!v) return `<span class="c na">${lab} –</span>`; if (v.pts != null) return `<span class="c" title="${lab}: ${v.pts.toFixed(2)} points/hour">${lab} ${v.pts.toFixed(1)}</span>`; return `<span class="c" title="${lab}: mean error ${v.mae.toFixed(1)}${unit}">${lab} ${k === "dir" ? Math.round(v.mae) : v.mae.toFixed(1)}</span>`; };
+  let h = `<table class="mix"><thead><tr><th></th><th>Source</th><th>Recent verification at ${ic || "station"}</th><th>Auto</th><th>Manual</th><th>Share of blend</th></tr></thead><tbody>`;
+  for (const s of rows){
+    const on = prefs.enabled[s.id] !== false, av = have.has(s.id), st = sk && sk.stats[s.id];
+    const auto = sk && sk.overall && sk.overall[s.id] != null ? sk.overall[s.id] : null;
+    const exc = sk && sk.excluded && sk.excluded.has(s.id);
+    const hist = sk && sk.hist && sk.hist[s.id];
+    const share = eff(s.id)/tot;
+    h += `<tr class="${av ? "" : "na"} ${on && !exc ? "" : "offr"}">
+      <td><label class="sw"><input type="checkbox" data-src="${s.id}" ${on ? "checked" : ""}><i></i></label></td>
+      <td><b>${s.name}</b> <span class="tag">${FAMTAG[s.fam] || ""}</span>${!av ? `<small>${s.fam === "mos" && ic && !isUS(ic) ? "US stations only" : S.status[s.id] && S.status[s.id] !== "ok" ? S.status[s.id] : "doesn't cover this station"}</small>` : exc ? `<small>left out by "best ${prefs.topN}"</small>` : s.id === "persist" ? `<small>weight fades over the first few hours after the latest ob</small>` : s.id === "clim" ? `<small>${ic && S.clim[ic] ? `${S.clim[ic].years.length} years, same hour, within 15 days of the date; used for wind, visibility, ceiling and weather` : "built by the climatology workflow"}</small>` : ""}</td>
+      <td class="chips">${av && s.fam !== "obs" ? chip(st, "t", "T", "°") + chip(st, "td", "Td", "°") + chip(st, "spd", "Wind", " kt") + chip(st, "dir", "Dir", "°") + chip(st, "vis", "Vis", "") + chip(st, "ceil", "Cig", "") + chip(st, "wx", "Wx", "") + (hist ? `<span class="c h" title="Competition history: ${hist.avg.toFixed(1)} points/hour over ${hist.hours} graded hours">Hist ${hist.avg.toFixed(1)}</span>` : "") : ""}</td>
+      <td>${av && auto != null && s.fam !== "obs" ? `<span class="auto ${auto > 1.15 ? "up" : auto < 0.87 ? "dn" : ""}">×${auto.toFixed(2)}</span>` : ""}</td>
+      <td><select data-w="${s.id}" ${av ? "" : "disabled"}>${[0.5,1,1.5,2,3].map(x => `<option value="${x}" ${x == (prefs.weight[s.id] ?? 1) ? "selected" : ""}>×${x}</option>`).join("")}</select></td>
+      <td class="bar">${share > 0 ? `<span style="width:${Math.max(2, share*100*2.2).toFixed(1)}%"></span><em>${(share*100).toFixed(share < 0.1 ? 1 : 0)}%</em>` : ""}</td></tr>`;
+  }
+  h += `</tbody></table>`;
+  $("mixer").innerHTML = h;
+  $("wmode").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x.dataset.m === prefs.wmode));
+  $("topN").value = String(prefs.topN || 0);
+  const nOn = rows.filter(r => have.has(r.id) && eff(r.id) > 0).length;
+  $("mixSum").textContent = sk ? `${nOn} sources in the blend for ${ic}; verified over the last ${sk.nHours} observed hours` : "";
+  $("optBias").checked = prefs.bias; $("wPersist").value = prefs.wPersist; $("wTaf").value = prefs.wTaf;
+  const Rr = prefs.rules; $("rMin").value = Rr.minWxProb ?? 0; $("rWxCode").value = Rr.wxNoneCode || ""; $("rTp").value = Rr.tempPenalty ?? 3; $("rCeil").value = Rr.noCeilCode; $("rAny").checked = Rr.tempAnyOb; $("rOk").checked = !!Rr.confirmed;
+}
+let toastT = null;
+function toast(m){ const t = $("toast"); t.textContent = m; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2600); }
+
+/* ---------- demo data ---------- */
+function rng(seed){ let x = seed >>> 0 || 1; return () => (x = (x*1664525 + 1013904223) >>> 0)/4294967296; }
+function demoBase(icao, t){ const st = STATIONS[icao] || { lat:50 }; const cold = st.lat > 60; const h = new Date(t).getUTCHours(); const lt = (h + (st.lon || 0)/15 + 24) % 24; const front = 30 + (icao.charCodeAt(1) % 20);
+  const k = (t - Date.now())/H; const post = k > front; return { t:(cold ? -6 : 7) + 4*Math.sin((lt - 9)/24*2*Math.PI) + (post ? -3 : 0), td:(cold ? -9 : 4) + (post ? -2 : 0), ws: 8 + 6*Math.sin(k/9) + (post ? 6 : 0), dir: post ? 320 : 220, vis: Math.abs(k - front) < 4 ? 3000 : 9999, ceil: Math.abs(k - front) < 6 ? 900 : post ? null : 3500, wc: Math.abs(k - front) < 4 ? (cold ? 73 : 61) : 2 }; }
+async function demoOM(def, ens, stations, TL){
+  await new Promise(r => setTimeout(r, 50 + Math.random()*250));
+  if (def.fam === "regional" && !/icond2|iconeu|ukv|hrdps/.test(def.id)) throw new Error("demo");
+  return stations.map((st, si) => { const r = rng(def.id.length*31 + si*7 + def.model.length); const n = ens ? 12 : 1; return Array.from({ length:n }, () => { const m = blankMember(TL); const bias = (r() - 0.5)*3; ["ws","wg","ccl","cc"].forEach(k => m[k] = new Array(TL.n).fill(undefined));
+    for (let i = 0; i < TL.n; i++){ const b = demoBase(st.icao, TL.t0 + i*H); m.t[i] = b.t + bias + (r() - 0.5); m.td[i] = Math.min(m.t[i], b.td + bias*0.5); m.ws[i] = Math.max(0, b.ws + (r() - 0.5)*4); m.wg[i] = m.ws[i]*1.4; m.dir[i] = (b.dir + (r() - 0.5)*40 + 360) % 360; m.vis[i] = b.vis*(0.7 + r()*0.6); m.wc[i] = b.wc; m.ceil[i] = b.ceil == null ? null : b.ceil*(0.7 + r()*0.6); }
+    m.spd = m.ws.map((w, i) => Math.max(w, m.wg[i])); return finishMember(m, TL); }); });
+}
+function demoObs(icao){
+  const now = Math.floor(Date.now()/H)*H, out = [];
+  for (let t = now - 48*H; t <= now; t += H){ const b = demoBase(icao, t + 53*60e3); const d = new Date(t + 53*60e3);
+    const wind = `${p3(Math.round(b.dir/10)*10)}${p2(Math.round(b.ws + 3))}${b.ws > 14 ? "G" + p2(Math.round(b.ws + 12)) : ""}KT`;
+    const vis = b.vis >= 9999 ? "9999" : String(Math.round(b.vis/100)*100).padStart(4, "0");
+    const wx = b.wc >= 71 ? " -SN" : b.wc >= 61 ? " -RA" : ""; const cl = b.ceil == null ? "FEW040" : `BKN${p3(Math.round(b.ceil/100))}`;
+    out.push(parseMETAR(`METAR ${icao} ${p2(d.getUTCDate())}${p2(d.getUTCHours())}53Z ${wind} ${vis}${wx} ${cl} ${fmtTemp(b.t + 1)}/${fmtTemp(b.td)} Q1012`, d.getTime())); }
+  return { obs: out.filter(Boolean), from:"demo" };
+}
+function demoClim(icao){
+  const r = rng(icao.charCodeAt(0)*17 + icao.charCodeAt(3)), recs = [];
+  for (let y = 2015; y < 2026; y++) for (let doy = 281; doy <= 316; doy++) for (let h = 0; h < 24; h++){
+    const fog = r() < (h >= 4 && h <= 9 ? 0.22 : 0.06), rain = r() < 0.12, cold = (STATIONS[icao] || {}).lat > 60;
+    const vis = fog ? [400, 800, 1600, 3000][Math.floor(r()*4)] : rain ? 6000 : 9999;
+    const ceil = fog ? [100, 200, 500][Math.floor(r()*3)] : r() < 0.35 ? Math.round(r()*40 + 5)*100 : -1;
+    const spd = Math.round(r()*r()*25), dir = spd < 1 ? 0 : spd < 4 && r() < 0.4 ? -1 : Math.round(r()*35 + 1)*10;
+    recs.push([doy, h, y, vis, ceil, spd, dir, (fog ? 16 : 0) | (rain ? (cold ? 4 : 1) : 0), cold ? -8 : 6, cold ? -11 : 3]);
+  }
+  return { icao, years: Array.from({ length:11 }, (_, i) => 2015 + i), recs };
+}
+function demoTAF(icao){ const d = new Date(Math.floor(Date.now()/(6*H))*6*H); const dd = p2(d.getUTCDate()), hh = p2(d.getUTCHours()); const e = new Date(d.getTime() + 30*H);
+  return { taf: parseTAF(`TAF ${icao} ${dd}${hh}00Z ${dd}${hh}/${p2(e.getUTCDate())}${p2(e.getUTCHours())} 22010KT 9999 SCT035 BECMG ${dd}${p2((d.getUTCHours() + 8) % 24)}/${dd}${p2((d.getUTCHours() + 10) % 24)} 32016G26KT 4000 -RA BKN009`, Date.now()), from:"demo" }; }
+
+/* ============================================================
+   Events
+   ============================================================ */
+function bind(){
+  $("daySel").onchange = e => { prefs.day = e.target.value; savePrefs(); S.cur = 0; loadDay(); };
+  $("custIcao").value = prefs.custom.icao || ""; $("custStart").value = prefs.custom.start || "";
+  $("custGo").onclick = () => { prefs.custom = { icao:$("custIcao").value, start:$("custStart").value }; savePrefs(); S.cur = 0; loadDay(); };
+  $("team").oninput = e => { prefs.team = e.target.value.trim(); savePrefs(); $("fname").textContent = fileName(); renderSubmission(); };
+  $("tabs").onclick = e => { const b = e.target.closest("[data-i]"); if (!b) return; S.cur = +b.dataset.i; closePop(); renderAll(); };
+  $("block").onclick = e => { const td = e.target.closest("td.cell"); if (td) openPop(td); };
+  document.addEventListener("mousedown", e => { if (S.popover && !S.popover.pop.contains(e.target) && !e.target.closest("td.cell")) closePop(); });
+  $("elSel").onclick = e => { const b = e.target.closest("[data-k]"); if (!b) return; prefs.el = b.dataset.k; savePrefs(); renderGuidance(); };
+  $("refresh").onclick = () => { if (!S.loading) loadDay(); };
+  $("mc").onchange = e => { const q = e.target.dataset.q; if (q == null) return; const dk = String(currentDay().n); texts[dk].mc[+q] = e.target.value; saveTexts(); renderSubmission(); };
+  $("sa").oninput = e => { const dk = String(currentDay().n); texts[dk].sa = e.target.value; saveTexts(); $("saCount").textContent = `${((e.target.value.trim().match(/\S+/g)) || []).length} words`; };
+  $("subDate").onchange = e => { texts[String(currentDay().n)].date = e.target.value; saveTexts(); };
+  $("dl").onclick = () => showChecks(() => { saveSubmission(); download(buildWorkbook(), fileName()); toast("Workbook downloaded and saved for grading"); });
+  $("chkBtn").onclick = () => showChecks(null);
+  $("chkCancel").onclick = () => $("chkDlg").close();
+  $("saveSub").onclick = () => { saveSubmission(); toast("Saved for grading"); };
+  $("copyTxt").onclick = async () => { const day = currentDay(); const t = S.blocks.map(b => `${b.icao} ${new Date(b.start).toISOString().slice(0, 13)}Z\n` + official(b).map((r, i) => `Hr ${p2(i)}-${p2(i + 1)}  ${ELEMENTS.map(e => (r[e.k] || "-").padEnd(e.k === "wx" ? 22 : 4)).join(" ")}`).join("\n")).join("\n\n"); try { await navigator.clipboard.writeText(t); toast("Forecast copied as text"); } catch (e){ toast("Copy failed"); } };
+  $("importWb").onchange = e => { const f = e.target.files[0]; if (f) importWorkbook(f).catch(err => toast("Couldn't read that workbook")); e.target.value = ""; };
+  $("exportSubs").onclick = () => download(new Blob([JSON.stringify(subs, null, 1)], { type:"application/json" }), `TFC26_${prefs.team || "team"}_submissions.json`);
+  $("importSubs").onchange = async e => { const f = e.target.files[0]; if (!f) return; try { Object.assign(subs, JSON.parse(await f.text())); saveSubs(); renderGrades(); toast("Submissions imported"); } catch (err){ toast("Not a submissions file"); } e.target.value = ""; };
+  $("grades").onclick = e => { const l = e.target.closest("[data-loadobs]"); if (l) loadObsFor(l.dataset.loadobs); const d = e.target.closest("[data-del]"); if (d && confirm("Remove this saved forecast?")){ delete subs[d.dataset.del]; saveSubs(); renderGrades(); } };
+  const remix = () => { savePrefs(); for (const ic in S.skill) applyFactors(ic); computeAll(); renderAll(); };
+  $("mixer").onchange = e => { const t = e.target; if (t.dataset.src) prefs.enabled[t.dataset.src] = t.checked; if (t.dataset.w){ const v = +t.value; if (v === 1) delete prefs.weight[t.dataset.w]; else prefs.weight[t.dataset.w] = v; } remix(); };
+  $("wmode").onclick = e => { const b = e.target.closest("[data-m]"); if (!b) return; prefs.wmode = b.dataset.m; remix(); };
+  $("topN").onchange = e => { prefs.topN = +e.target.value; remix(); };
+  $("presets").onclick = e => {
+    const b = e.target.closest("[data-p]"); if (!b) return;
+    const set = f => { prefs.enabled = {}; ALL_SRC.forEach(s => { if (!f(s)) prefs.enabled[s.id] = false; }); };
+    if (b.dataset.p === "all") set(() => true);
+    if (b.dataset.p === "global") set(s => s.fam === "global" || s.fam === "ens" || s.fam === "obs");
+    if (b.dataset.p === "hires") set(s => s.fam !== "global");
+    if (b.dataset.p === "det") set(s => s.fam !== "ens");
+    if (b.dataset.p === "reset"){ prefs.enabled = {}; prefs.weight = {}; prefs.topN = 0; prefs.wmode = "skill"; }
+    remix(); toast("Blend updated");
+  };
+  $("optBias").onchange = e => { prefs.bias = e.target.checked; savePrefs(); computeAll(); renderAll(); };
+  $("wPersist").onchange = e => { prefs.wPersist = +e.target.value; savePrefs(); computeAll(); renderAll(); };
+  $("wTaf").onchange = e => { prefs.wTaf = +e.target.value; savePrefs(); computeAll(); renderAll(); };
+  const rset = () => { prefs.rules = { version:3, minWxProb:+$("rMin").value || 0, wxNoneCode:$("rWxCode").value, noCeilCode:$("rCeil").value.trim().toUpperCase(), tempPenalty:+$("rTp").value || 3, tempAnyOb:$("rAny").checked, confirmed:$("rOk").checked }; S.skillKey = {}; savePrefs(); computeAll(); renderAll(); };
+  ["rMin","rWxCode","rCeil","rTp","rAny","rOk"].forEach(id => $(id).onchange = rset);
+  $("outlookTxt").oninput = e => { e.target.dataset.edited = "1"; };
+  $("outlookDl").onclick = () => (S.outlookSaved = true) && download(new Blob([$("outlookTxt").value], { type:"text/plain" }), `${(prefs.team || "TEAMNAME").replace(/[^A-Za-z0-9-]/g, "")}_TFC26_ETAR-OUTLOOK_03.txt`);
+  $("outlookRegen").onclick = () => { delete $("outlookTxt").dataset.edited; renderOutlook(); };
+  window.addEventListener("resize", () => renderMeteo());
+  setInterval(renderHeader, 30000);
+}
+if (prefs.day == null) prefs.day = String(defaultDay().n);
+bind();
+loadDay();
+</script>
+</body></html>
