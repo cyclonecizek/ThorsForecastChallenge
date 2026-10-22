@@ -154,17 +154,32 @@ function hourObs(obs, start){
 }
 
 /* ---------- TFC26 scoring chart ---------- */
+/* Present weather points: WX_MATRIX[observed][forecast] (commissioner's grading table).
+   Freezing is the only category with penalties: -2 for forecasting it when it doesn't occur,
+   and -2 for any other forecast (including blank) when it does. */
+const WX_MATRIX = {
+  "Freezing":              { "Freezing":6,  "Frozen":-2, "Liquid":-2, "Non-Precip Hydrometer":-2, "Lithometer":-2, "":-2 },
+  "Frozen":                { "Freezing":-2, "Frozen":4,  "Liquid":0,  "Non-Precip Hydrometer":0,  "Lithometer":0,  "":0 },
+  "Liquid":                { "Freezing":-2, "Frozen":0,  "Liquid":4,  "Non-Precip Hydrometer":0,  "Lithometer":0,  "":0 },
+  "Non-Precip Hydrometer": { "Freezing":-2, "Frozen":0,  "Liquid":0,  "Non-Precip Hydrometer":2,  "Lithometer":0,  "":0 },
+  "Lithometer":            { "Freezing":-2, "Frozen":0,  "Liquid":0,  "Non-Precip Hydrometer":0,  "Lithometer":2,  "":0 },
+  "":                      { "Freezing":-2, "Frozen":0,  "Liquid":0,  "Non-Precip Hydrometer":0,  "Lithometer":0,  "":0 },
+};
 const DEFAULT_RULES = {
-  version: 2,
-  noneWxPts: 0,            /* commissioner: blank (none) forecast vs none observed scores ~0 */
-  falseAlarmPts: 0,        /* weather forecast but none observed (not yet confirmed) */
-  minWxProb: 15,           /* only forecast a weather type when its chance is at least this (%) */
+  version: 4,
+  minWxProb: 0,            /* only forecast a weather type when its chance is at least this (%); 0 = pure expected score */
   wxNoneCode: "",          /* what goes in the workbook for no significant weather: blank */
-  fzMissPenalty: false,    /* -2 also when freezing precip is observed but not forecast (not confirmed) */
-  noCeilCode: "",          /* commissioner: leave Min Cig blank when no ceiling is expected; full points if none occurs */
-  tempAnyOb: false,        /* temp/dew accurate if it matches any ob in the hour (else the routine ob) */
+  noCeilCode: "",          /* leave Min Cig blank when no ceiling is expected; full points if none occurs */
+  tempPenalty: 3,          /* temp/dew point -1 when this many degrees or more off */
+  tempAnyOb: true,         /* commissioner: SPECIs count, so temp/dew is checked against every report in the hour */
   confirmed: true,
 };
+/* which row of the matrix an hour's observed categories fall in, for a given forecast */
+function wxRow(oCats, f){
+  if (oCats.has(WX.FZ)) return WX.FZ;
+  if (f && oCats.has(f)) return f;
+  return [...oCats].sort((a, b) => WX_RANK[b] - WX_RANK[a])[0] || "";
+}
 function scoreDir(f, o){
   if (o == null || f == null || f === "") return null;
   if (o === "VRB") return 0;
@@ -175,12 +190,9 @@ function scoreSpd(f, o){ if (o == null || f == null || f === "") return null; co
 function scoreVis(f, o){ if (o == null || f == null || f === "") return null; const a = +f >= 9000 && +f !== 9000 ? 9999 : +f, b = o; if (a === b) return 6; const d = Math.abs(a - b); return d <= 400 ? 4 : d <= 800 ? 2 : d >= 1600 ? -2 : 0; }
 function scoreWx(f, oCats, R){
   if (!oCats) return null;
-  f = f || ""; const o = [...oCats];
-  if (f === WX.FZ) return oCats.has(WX.FZ) ? 6 : -2;
-  if (R.fzMissPenalty && oCats.has(WX.FZ)) return -2;
-  if (f === "" || f === "None") return o.length ? 0 : R.noneWxPts;
-  if (oCats.has(f)) return f === WX.LIQ || f === WX.FROZ ? 4 : 2;
-  return o.length ? 0 : (R.falseAlarmPts || 0);
+  f = f === "None" ? "" : (f || "");
+  const row = WX_MATRIX[wxRow(oCats, f)];
+  return row && row[f] !== undefined ? row[f] : 0;
 }
 function scoreCeil(f, o, R){
   if (o === undefined || f == null) return null;
@@ -194,7 +206,7 @@ function scoreTemp(f, o, list, R){
   const fv = parseTemp(f); if (fv == null || o == null) return null;
   const vals = R.tempAnyOb && list && list.length ? list.filter(v => v != null) : [o];
   if (vals.some(v => v === fv)) return 1;
-  return vals.every(v => Math.abs(v - fv) >= 5) ? -1 : 0;
+  return vals.every(v => Math.abs(v - fv) >= (R.tempPenalty || 3)) ? -1 : 0;
 }
 const fmtTemp = v => v == null ? "" : (v < 0 ? "M" : "") + p2(Math.abs(Math.round(v)));
 function gradeHour(fc, ob, R){
@@ -248,7 +260,8 @@ function optimizeHour(samples, R, opts){
     const d = discreteNormal(samples, key, -60, 50, 1, opts.sigT ?? 0.9);
     if (!d){ res[key] = null; continue; }
     const P = j => d.pr[j] || 0, idx = v => v - d.lo;
-    const ev = c => { let e = P(idx(c)); for (let j = 0; j < d.pr.length; j++){ const v = d.lo + j; if (Math.abs(v - c) >= 5) e -= d.pr[j]; } return e; };
+    const pen = R.tempPenalty || 3;
+    const ev = c => { let e = P(idx(c)); for (let j = 0; j < d.pr.length; j++){ const v = d.lo + j; if (Math.abs(v - c) >= pen) e -= d.pr[j]; } return e; };
     let mode = 0, mp = -1; d.pr.forEach((p, j) => { if (p > mp){ mp = p; mode = d.lo + j; } });
     const cands = []; for (let c = mode - 4; c <= mode + 4; c++) cands.push(c);
     const b = best(cands, ev); res[key] = { v:b.v, ev:b.ev, alts: rank(cands, ev, 5), dist:d, fmt: fmtTemp(b.v), evf: s => { const v = parseTemp(s); return v == null ? null : ev(v); } };
@@ -325,18 +338,14 @@ function optimizeHour(samples, R, opts){
   /* present weather: probability of each category from the samples */
   {
     const P = { "":0, "Liquid":0, "Freezing":0, "Frozen":0, "Lithometer":0, "Non-Precip Hydrometer":0 }; let W = 0;
-    for (const s0 of samples){ if (!s0.cats) continue; const w = wOf(s0, "wx"); W += w; if (!s0.cats.size) P[""] += w; s0.cats.forEach(c => P[c] += w/s0.cats.size); }
+    /* a sample with freezing precipitation counts in the Freezing row; mixed types split their weight */
+    for (const s0 of samples){ if (!s0.cats) continue; const w = wOf(s0, "wx"); W += w; if (!s0.cats.size) P[""] += w; else if (s0.cats.has(WX.FZ)) P[WX.FZ] += w; else s0.cats.forEach(c => P[c] += w/s0.cats.size); }
     if (W > 0){
       for (const k in P) P[k] /= W;
       const pOf = c => P[c] || 0;
-      const ev = c => {
-        if (c !== "" && pOf(c) < (R.minWxProb || 0)/100) return -Infinity;   /* below the minimum chance: not a candidate */
-        if (c === WX.FZ) return 6*pOf(WX.FZ) - 2*(1 - pOf(WX.FZ));
-        const fzPen = R.fzMissPenalty ? -2*pOf(WX.FZ) : 0;
-        if (c === "") return R.noneWxPts*pOf("") + fzPen;
-        return (c === WX.LIQ || c === WX.FROZ ? 4 : 2)*pOf(c) + (R.falseAlarmPts || 0)*pOf("") + fzPen;
-      };
-      const evRaw = c => ev === null ? 0 : (c === "" ? ev("") : (() => { const keep = R.minWxProb; R.minWxProb = 0; const v = ev(c); R.minWxProb = keep; return v; })());
+      const evM = c => { let e = 0; for (const o in P) e += P[o]*WX_MATRIX[o][c]; return e; };
+      const ev = c => (c !== "" && pOf(c) < (R.minWxProb || 0)/100) ? -Infinity : evM(c);   /* below the minimum chance: not a candidate */
+      const evRaw = c => evM(c);
       const b = best(WX_LIST, ev); res.wx = { v:b.v, ev:b.ev, alts: rank(WX_LIST, evRaw, 6), P, fmt:b.v, evf: s => evRaw(s === "None" ? "" : (s || "")) };
     } else res.wx = null;
   }
