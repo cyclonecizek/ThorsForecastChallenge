@@ -142,6 +142,12 @@ textarea{ width:100%; border:1px solid var(--rule); border-radius:8px; padding:9
 .gr h3{ display:flex; gap:10px; align-items:center; text-transform:none; font-size:16px; color:var(--ink); }
 .gr h3 span{ font:500 12.5px var(--font); color:var(--ink-3); }
 .gr h3 .btn{ margin-left:auto; }
+table.j2{ border-collapse:separate; border-spacing:2px; width:100%; font-size:13px; }
+.j2 th,.j2 td{ padding:5px 8px; text-align:center; white-space:nowrap; }
+.j2 thead th{ font:600 13px var(--cond); color:var(--ink-2); } .j2 thead th small{ display:block; font:500 11.5px var(--font); color:var(--ink-3); }
+.j2 tr.asset th{ text-align:left; font:700 14px var(--cond); } .j2 tr.asset td{ border-radius:6px; font-weight:700; }
+.j2 td.fn{ text-align:left; color:var(--ink-2); padding-left:18px; }
+.j2 td.fc{ font-weight:700; background:var(--panel-2); border-radius:5px; } .j2 td.fc small{ font-weight:500; color:var(--ink-3); margin-left:5px; font-size:11px; }
 table.gt{ border-collapse:collapse; font-size:13px; width:100%; }
 .gt th,.gt td{ padding:3px 8px; border-bottom:1px solid var(--rule-2); text-align:right; }
 .gt th:first-child,.gt td:first-child{ text-align:left; }
@@ -247,9 +253,18 @@ ul.chkl li.info{ border-color:var(--accent); } ul.chkl li.ok{ border-color:var(-
       <p class="note">Each row is that source's own best forecast under the scoring chart. Green values match yours. Weights include the recent-skill factor.</p>
     </section>
     <section class="panel" id="outlookCard" hidden>
-      <div class="ghead"><h2>Three-Day ETAR Outlook draft <span>T+3 to T+5</span></h2><div class="actions"><button class="btn sm" id="outlookRegen">Regenerate</button><button class="btn sm" id="outlookDl">Download .txt</button></div></div>
-      <textarea id="outlookTxt" rows="12"></textarea>
+      <div class="ghead"><h2>Three-Day ETAR Outlook <span>T+3 to T+5, against the J2 thresholds</span></h2><div class="actions"><label class="mut">Call a category at <input type="number" id="j2Thr" value="30" min="10" max="80" step="5" style="width:56px"> %</label><button class="btn sm" id="outlookRegen">Regenerate</button></div></div>
+      <p class="note" style="margin-top:0">Sable-6 and Raven-4 are Endorian collection assets: Limited or Constrained conditions for them are windows for JTF movement.</p>
+      <div class="scroll" id="j2Matrix"></div>
+      <div class="ghead" style="margin-top:14px"><h3>Outlook (Annex C)</h3><div class="actions"><button class="btn sm" id="outlookDl">Download .txt</button></div></div>
+      <textarea id="outlookTxt" rows="16"></textarea>
       <p class="note" id="outlookNote"></p>
+      <div class="ghead" style="margin-top:14px"><h3>Commander briefing</h3><div class="actions"><span class="mut" id="briefCount"></span><button class="btn sm" id="briefCopy">Copy</button><button class="btn sm primary" id="briefToSA">Use as short answer</button></div></div>
+      <textarea id="briefTxt" rows="10"></textarea>
+      <details class="note" style="margin-top:10px"><summary>J2 thresholds used</summary>
+        <p><b>Sable-6:</b> visibility limited 3 to &lt;5 SM, constrained &lt;3 SM; precipitation limited intermittent moderate, constrained heavy or persistent moderate (3 h or more); sustained wind 21–25 / &gt;25 kt; gusts 31–35 / &gt;35 kt; lightning 10–20 / within 10 NM; EO/IR reduced by visibility under 5 SM, ceilings under 3,000 ft or moderate precipitation, severely degraded under 3 SM, ceilings under 1,000 ft, fog or heavy precipitation; passive RF reduced by gusts 31–35 kt or sustained wind over 20 kt, mast stowed with lightning within 10 NM or gusts over 35 kt.</p>
+        <p><b>Raven-4:</b> visibility 3 to &lt;5 / &lt;3 SM; surface wind 15–24 / &gt;24 kt; precipitation intermittent moderate / heavy; lightning 10–20 / within 10 NM; launch/recovery takes the worst of those four. Moderate precipitation is 2.5 mm/h or more, heavy 7.6 mm/h or more.</p>
+      </details>
     </section>
     <section class="panel">
       <h2>Submission</h2>
@@ -990,38 +1005,198 @@ async function importWorkbook(file){
   saveSubs(); toast(`Imported ${added} forecast${added === 1 ? "" : "s"} from ${file.name}`); renderGrades();
 }
 
-/* ---------- Day 3 ETAR outlook helper ---------- */
+/* ---------- Day 3 ETAR outlook against the J2 asset thresholds ----------
+   Sable-6 and Raven-4 are Endorian collection assets, so conditions that limit or constrain them
+   are windows for JTF movement. Each factor is scored per guidance member, then turned into a
+   chance of Limited-or-worse and of Constrained; a category is called when its chance reaches
+   the call threshold (30 % by default). */
+const J2 = {
+  sable: { name:"Sable-6 Mobile ISR and Signals Detachment", short:"Sable-6", factors:[
+    { k:"vis",  name:"Visibility",          lim:"3 to <5 SM",                 con:"<3 SM" },
+    { k:"pcpS", name:"Precipitation",       lim:"intermittent moderate",      con:"heavy or persistent moderate" },
+    { k:"sust", name:"Sustained wind",      lim:"21–25 kt",                   con:">25 kt" },
+    { k:"gust", name:"Wind gusts",          lim:"31–35 kt",                   con:">35 kt" },
+    { k:"ltg",  name:"Lightning",           lim:"within 10–20 NM",            con:"within 10 NM" },
+    { k:"eoir", name:"EO/IR collection",    lim:"reduced range and degraded imagery", con:"severely degraded" },
+    { k:"rf",   name:"Passive RF collection", lim:"reduced by mast restrictions", con:"mast stowed" } ] },
+  raven: { name:"Raven-4 Tactical UAS", short:"Raven-4", factors:[
+    { k:"vis",  name:"Visibility",          lim:"3 to <5 SM",                 con:"<3 SM" },
+    { k:"sfcw", name:"Surface wind",        lim:"15–24 kt",                   con:">24 kt" },
+    { k:"pcpR", name:"Precipitation",       lim:"intermittent moderate",      con:"heavy" },
+    { k:"ltg",  name:"Lightning",           lim:"within 10–20 NM",            con:"within 10 NM" },
+    { k:"lr",   name:"Launch / recovery",   lim:"delayed or restricted",      con:"suspended" } ] },
+};
+const CAT = ["Favorable","Limited","Constrained"], CATC = ["#2F7A4A","#B5862B","#B23A2E"];
+const VIS3 = 4828, VIS5 = 8047, MOD = 2.5, HEAVY = 7.6;   /* m, m, mm/h, mm/h */
+/* per-member category (0/1/2) for one factor over a set of hour indices; lightning handled separately */
+function memberCats(m, idx){
+  const get = (k, i) => m[k] ? m[k][i] : undefined;
+  const vals = k => idx.map(i => get(k, i)).filter(v => v != null);
+  const mx = k => { const v = vals(k); return v.length ? Math.max(...v) : null; }, mn = k => { const v = vals(k); return v.length ? Math.min(...v) : null; };
+  const out = {};
+  const vis = mn("vis"); out.vis = vis == null ? null : vis < VIS3 ? 2 : vis < VIS5 ? 1 : 0;
+  const pr = idx.map(i => get("pr", i)); let run = 0, longest = 0, anyMod = false, anyHeavy = false, havePr = false;
+  for (const p of pr){ if (p == null) { run = 0; continue; } havePr = true; if (p >= HEAVY) anyHeavy = true; if (p >= MOD){ anyMod = true; run++; longest = Math.max(longest, run); } else run = 0; }
+  out.pcpS = !havePr ? null : anyHeavy || longest >= 3 ? 2 : anyMod ? 1 : 0;
+  out.pcpR = !havePr ? null : anyHeavy ? 2 : anyMod ? 1 : 0;
+  const ws = mx("ws"), wg = mx("wg");
+  out.sust = ws == null ? null : ws > 25 ? 2 : ws > 20 ? 1 : 0;
+  out.gust = wg == null ? null : wg > 35 ? 2 : wg > 30 ? 1 : 0;
+  out.sfcw = ws == null ? null : ws > 24 ? 2 : ws >= 15 ? 1 : 0;
+  const wc = vals("wc"); out.ts = wc.length ? wc.some(c => c >= 95) : null;
+  const fog = wc.some(c => c === 45 || c === 48);
+  const ce = idx.map(i => get("ceil", i)).filter(v => v !== undefined), ceil = ce.length ? (ce.some(v => v != null) ? Math.min(...ce.filter(v => v != null)) : 99999) : null;
+  const low = mx("ccl");
+  out.eoir = (vis == null && ceil == null && low == null) ? null : ((vis != null && vis < VIS3) || (ceil != null && ceil < 1000) || anyHeavy || fog) ? 2 : ((vis != null && vis < VIS5) || (ceil != null && ceil < 3000) || (ceil == null && low != null && low >= 87.5) || anyMod) ? 1 : 0;
+  out.rf = wg == null ? null : (out.ts || wg > 35) ? 2 : (wg > 30 || (ws != null && ws > 20)) ? 1 : 0;
+  return out;
+}
+/* chance of Limited-or-worse and Constrained for every factor, over the members of every source */
+function assessJ2(ic, idx){
+  const acc = {}, tsW = { w:0, h:0 };
+  for (const src of S.srcs[ic] || []){
+    const w0 = W(src.def.id, ic); if (!w0 || !src.members.length || src.def.fam === "mos") continue;
+    const w = w0/src.members.length;
+    for (const m of src.members){
+      const c = memberCats(m, idx);
+      for (const k in c){ if (k === "ts" || c[k] == null) continue; const a = acc[k] = acc[k] || { w:0, l:0, c:0 }; a.w += w; if (c[k] >= 1) a.l += w; if (c[k] >= 2) a.c += w; }
+      if (c.ts != null){ tsW.w += w; if (c.ts) tsW.h += w; }
+    }
+  }
+  const P = {}; for (const k in acc) P[k] = { l: acc[k].l/acc[k].w, c: acc[k].c/acc[k].w };
+  /* lightning near the base: a point thunderstorm chance spread to the 10 and 20 NM circles */
+  const pTs = tsW.w ? tsW.h/tsW.w : 0; P.ltg = { c: Math.min(1, 1.5*pTs), l: Math.min(1, 2.5*pTs) };
+  return P;
+}
+const callCat = (p, thr) => !p ? null : p.c >= thr ? 2 : p.l >= thr ? 1 : 0;
+function assetCats(P, thr){
+  const res = {};
+  for (const [id, A] of Object.entries(J2)){
+    const f = {};
+    for (const x of A.factors){
+      if (x.k === "lr"){ const parts = ["vis","sfcw","pcpR","ltg"].map(k => f[k] ? f[k].cat : 0); f.lr = { cat: Math.max(0, ...parts), p: null }; continue; }
+      f[x.k] = { cat: callCat(P[x.k], thr) ?? 0, p: P[x.k] || null };
+    }
+    res[id] = { f, cat: Math.max(...Object.values(f).map(v => v.cat)) };
+  }
+  return res;
+}
+/* hours (UTC) when a factor's hourly chance of Limited-or-worse reaches the threshold */
+function factorHours(ic, hours, k, thr, level){
+  const hit = hours.map(t => { const P = assessJ2(ic, [S.TL.idx(t), S.TL.idx(t + H)]); const p = P[k]; return p ? (level === 2 ? p.c : p.l) >= thr : false; });
+  let spans = []; let st = null;
+  hours.forEach((t, i) => { if (hit[i] && st == null) st = t; if ((!hit[i] || i === hours.length - 1) && st != null){ const end = hit[i] ? t + H : t; spans.push([st, end]); st = null; } });
+  /* join stretches less than 3 hours apart, then describe */
+  spans = spans.reduce((acc, sp) => { const l = acc[acc.length - 1]; if (l && sp[0] - l[1] < 3*H) l[1] = sp[1]; else acc.push([...sp]); return acc; }, []);
+  if (!spans.length) return "";
+  const last = hours[hours.length - 1] + H;
+  if (spans.length === 1 && spans[0][0] === hours[0] && spans[0][1] === last) return "much of the period";
+  if (spans.length > 2) return "at times";
+  const z = (t, end) => end && t === last && new Date(t).getUTCHours() === 0 ? "2400" : p2(new Date(t).getUTCHours()) + "00";
+  return spans.map(([a, b]) => `${z(a)}–${z(b, true)}Z`).join(" and ");
+}
+/* general conditions for a set of hours, from the member medians */
+function generalWx(ic, idx){
+  const mem = (S.srcs[ic] || []).filter(s => s.def.fam !== "mos").flatMap(s => s.members);
+  const med = a => { a = a.filter(v => v != null && isFinite(v)).sort((x, y) => x - y); return a.length ? a[a.length >> 1] : null; };
+  const per = f => med(mem.map(m => f(m)));
+  const ofI = (m, k, red) => { const v = idx.map(i => m[k] ? m[k][i] : null).filter(x => x != null); return v.length ? red(v) : null; };
+  const frac = f => { const v = mem.map(f).filter(x => x != null); return v.length ? v.filter(Boolean).length/v.length : 0; };
+  const cc = per(m => ofI(m, "cc", v => v.reduce((a, b) => a + b, 0)/v.length)), low = per(m => ofI(m, "ccl", v => Math.max(...v)));
+  const ceil = per(m => ofI(m, "ceil", v => Math.min(...v)));
+  return {
+    cc, low, ceil, tmin: per(m => ofI(m, "t", v => Math.min(...v))), tmax: per(m => ofI(m, "t", v => Math.max(...v))),
+    gust: per(m => ofI(m, "wg", v => Math.max(...v))), sust: per(m => ofI(m, "ws", v => Math.max(...v))),
+    dir: per(m => ofI(m, "dir", v => v[v.length >> 1])),
+    pRain: frac(m => ofI(m, "pr", v => Math.max(...v) >= 0.2)), pMod: frac(m => ofI(m, "pr", v => Math.max(...v) >= MOD)),
+    pFog: frac(m => ofI(m, "vis", v => Math.min(...v) < 1000)), pSnow: frac(m => ofI(m, "sf", v => Math.max(...v) > 0.05)),
+    pTs: frac(m => ofI(m, "wc", v => v.some(c => c >= 95))),
+  };
+}
+const skyWords = g => g.cc == null ? "Sky condition uncertain" : g.cc >= 85 ? `Overcast${g.ceil != null && g.ceil < 3000 ? `, ceilings near ${Math.round(g.ceil/100)*100} ft` : ""}` : g.cc >= 60 ? `Mostly cloudy${g.ceil != null && g.ceil < 3000 ? `, ceilings ${Math.round(g.ceil/100)*100} ft at times` : ""}` : g.cc >= 30 ? "Partly cloudy" : "Mostly clear";
+const pct = x => `${Math.round(x*100)}%`;
+const compass = d => d == null ? "variable" : ["N","NE","E","SE","S","SW","W","NW"][Math.round(((d % 360) + 360) % 360/45) % 8];
 function renderOutlook(){
   const day = currentDay(), box = $("outlookCard");
   if (!day.outlook){ box.hidden = true; return; }
   box.hidden = false;
-  const ic = day.outlook.icao, start = Date.parse(day.outlook.from + "T00:00:00Z");
-  if (!(S.srcs[ic] || []).length){ $("outlookTxt").value = $("outlookTxt").value || ""; $("outlookNote").textContent = S.loading ? "Loading ETAR guidance" : "No ETAR guidance loaded"; return; }
-  const lines = [];
-  const pct = x => Math.round(x*100);
-  for (let d = 0; d < day.outlook.days; d++){
-    const a = start + d*86400e3, hours = []; for (let t = a; t < a + 24*H; t += H) hours.push(samplesFor(ic, t).filter(s => s.cats || s.t != null));
-    const flat = hours.flat(); const tw = flat.reduce((s, x) => s + x.w, 0) || 1;
-    const P = f => flat.reduce((s, x) => s + (f(x) ? x.w : 0), 0)/tw;
-    const anyH = f => Math.max(...hours.map(hs => { const w = hs.reduce((s, x) => s + x.w, 0) || 1; return hs.reduce((s, x) => s + (f(x) ? x.w : 0), 0)/w; }));
-    const ceilLow = P(x => x.ceil != null && x.ceil < 1000), ceilAny = P(x => x.ceil != null && x.ceil < 3000);
-    const rain = anyH(x => x.cats && x.cats.has(WX.LIQ)), snow = anyH(x => x.cats && x.cats.has(WX.FROZ)), fz = anyH(x => x.cats && x.cats.has(WX.FZ));
-    const fog = anyH(x => x.vis != null && x.vis < 1000), gust = flat.map(x => x.spd).filter(v => v != null).sort((m, n) => m - n);
-    const g90 = gust.length ? gust[Math.floor(gust.length*0.9)] : null;
-    const ts = Math.max(...hours.map((hs, k) => { const sm = (S.srcs[ic] || []).flatMap(src => src.members.map(m => m.wc ? m.wc[S.TL.idx(a + k*H + H)] : undefined)).filter(v => v != null); return sm.length ? sm.filter(v => v >= 95).length/sm.length : 0; }));
-    const temps = flat.map(x => x.t).filter(v => v != null).sort((m, n) => m - n);
-    const sky = ceilLow > 0.4 ? "Low ceilings (below 1,000 ft) much of the day" : ceilAny > 0.5 ? "Mostly cloudy with ceilings 1,000–3,000 ft at times" : ceilAny > 0.25 ? "Variable cloud, occasional ceilings below 3,000 ft" : "Mostly scattered cloud or better";
-    const wx = [rain > 0.15 ? `rain ${pct(rain)}%` : "", snow > 0.1 ? `snow ${pct(snow)}%` : "", fz > 0.05 ? `freezing precipitation ${pct(fz)}%` : "", ts > 0.05 ? `thunderstorms ${pct(ts)}%` : ""].filter(Boolean).join(", ") || "precipitation unlikely";
-    const hz = [fog > 0.15 ? `fog/visibility below 1,000 m (${pct(fog)}% at worst hour)` : "", g90 != null && g90 >= 25 ? `gusts to ${Math.round(g90)} kt` : "", fz > 0.05 || (temps.length && temps[Math.floor(temps.length*0.1)] <= 0) ? "icing/frost risk" : ""].filter(Boolean).join("; ") || "no significant hazards expected";
-    lines.push(`T+${3 + d} ${new Date(a).toUTCString().slice(0, 11)}: ${sky}. Precipitation/convection: ${wx}. Hazards: ${hz}. Temperatures ${temps.length ? `${fmtTemp(temps[Math.floor(temps.length*0.1)])} to ${fmtTemp(temps[Math.floor(temps.length*0.9)])} °C` : "n/a"}. Planning implications: [your assessment for Sable-6 / Raven-4 and JTF operations].`);
+  const ic = day.outlook.icao, start = Date.parse(day.outlook.from + "T00:00:00Z"), thr = (+$("j2Thr").value || 30)/100;
+  if (!(S.srcs[ic] || []).length){ $("outlookNote").textContent = S.loading ? "Loading ETAR guidance" : "No ETAR guidance loaded"; return; }
+  const periods = [];
+  for (let d = 0; d < day.outlook.days; d++){ const a = start + d*86400e3; periods.push({ label:`T+${3 + d}`, date:a, a, b:a + 86400e3 }); }
+  if (day.outlook.callout){ const a = isoZ(day.outlook.callout[0]), b = isoZ(day.outlook.callout[1]); periods.push({ label:"T+5 0600–1200Z", date:a, a, b, callout:true }); }
+  const idxOf = p => { const out = []; for (let t = p.a; t <= p.b; t += H){ const i = S.TL.idx(t); if (i >= 0 && i < S.TL.n) out.push(i); } return out; };
+  const hoursOf = p => { const out = []; for (let t = p.a; t < p.b; t += H) out.push(t); return out; };
+  periods.forEach(p => { p.idx = idxOf(p); p.P = assessJ2(ic, p.idx); p.cats = assetCats(p.P, thr); p.g = generalWx(ic, p.idx); });
+  /* matrix */
+  const dayName = t => new Date(t).toUTCString().slice(0, 11).replace(",", "");
+  let h = `<table class="j2"><thead><tr><th></th>${periods.map(p => `<th>${p.label}<small>${p.callout ? "Wed 28 Oct" : dayName(p.date)}</small></th>`).join("")}</tr></thead><tbody>`;
+  for (const [id, A] of Object.entries(J2)){
+    h += `<tr class="asset"><th>${A.short}</th>${periods.map(p => { const c = p.cats[id].cat; return `<td style="background:${CATC[c]};color:#fff">${CAT[c]}</td>`; }).join("")}</tr>`;
+    for (const x of A.factors){
+      h += `<tr><td class="fn">${x.name}</td>${periods.map(p => { const f = p.cats[id].f[x.k], c = f.cat; return `<td class="fc" style="color:${CATC[c]}" title="${x.name}: ${CAT[c]}${f.p ? ` (Limited or worse ${pct(f.p.l)}, Constrained ${pct(f.p.c)})` : ""}">${CAT[c][0]}${f.p ? `<small>${pct(f.p.l)}/${pct(f.p.c)}</small>` : ""}</td>`; }).join("")}</tr>`;
+    }
   }
-  if (day.outlook.callout){
-    const a = isoZ(day.outlook.callout[0]), b = isoZ(day.outlook.callout[1]); const rs = []; for (let t = a; t < b; t += H){ const sm = samplesFor(ic, t); if (sm.length) rs.push(optimizeHour(sm, prefs.rules)); }
-    if (rs.length){ const g = k => rs.map(r => r[k] ? r[k].fmt : "").filter(Boolean); const ce = g("ceil"), vi = g("vis"), sp = g("spd"), dr = g("dir"), w = g("wx").filter(Boolean);
-      lines.push(`T+5 callout, ${new Date(a).toUTCString().slice(0, 11)} ${p2(new Date(a).getUTCHours())}00–${p2(new Date(b).getUTCHours())}00Z: most likely ceiling ${ce.join("/")} (hundreds ft), visibility ${vi.join("/")} m, wind ${dr[0] || "---"} at up to ${Math.max(...sp.map(Number))} kt${w.length ? `, ${[...new Set(w)].join("/")} precipitation possible` : ""}. Impacts: [Sable-6 EO/IR line of sight and mobility; Raven-4 launch/recovery and collection].`); }
+  h += `</tbody></table><p class="note">Small numbers: chance of Limited-or-worse / Constrained from all guidance members (lightning: thunderstorm chance spread to the 10 and 20 NM circles). A category is called at ${Math.round(thr*100)}%.</p>`;
+  $("j2Matrix").innerHTML = h;
+  /* outlook text */
+  const reason = (p, id) => {
+    const A = J2[id], f = p.cats[id].f, hrs = hoursOf(p);
+    const worst = A.factors.filter(x => x.k !== "lr" && f[x.k].cat >= 1 && f[x.k].cat === p.cats[id].cat);
+    if (!worst.length) return "no thresholds reached";
+    const nm = n => /^[A-Z]{2}/.test(n) ? n : n.charAt(0).toLowerCase() + n.slice(1);
+    return worst.slice(0, 3).map(x => { const span = factorHours(ic, hrs, x.k, thr, f[x.k].cat); return `${nm(x.name)} ${f[x.k].cat === 2 ? x.con : x.lim}${span ? ` (${span})` : ""}`; }).join("; ");
+  };
+  const lines = ["THREE-DAY OUTLOOK FORECAST: ETAR (Ramstein AB), T+3 Monday 26 October through T+5 Wednesday 28 October 2026", ""];
+  for (const p of periods.filter(p => !p.callout)){
+    const g = p.g, hz = [];
+    if (g.gust != null && g.gust >= 25) hz.push(`${compass(g.dir)} winds gusting ${Math.round(g.gust)} kt`);
+    if (g.pFog >= 0.2) hz.push(`fog or visibility below 1,000 m (${pct(g.pFog)})`);
+    if (g.tmin != null && g.tmin <= 1) hz.push(`frost/icing, minimum ${Math.round(g.tmin)} °C`);
+    if (g.pSnow >= 0.15) hz.push(`snow (${pct(g.pSnow)})`);
+    if (g.pTs >= 0.05) hz.push(`thunderstorms (${pct(g.pTs)})`);
+    lines.push(`${p.label} ${dayName(p.date).toUpperCase()}`);
+    lines.push(`Sky: ${skyWords(g)}. Temperatures ${g.tmin == null ? "–" : Math.round(g.tmin)} to ${g.tmax == null ? "–" : Math.round(g.tmax)} °C.`);
+    lines.push(`Precipitation/convection: ${g.pRain >= 0.6 ? "Rain likely" : g.pRain >= 0.3 ? "Showers possible" : "Mostly dry"} (${pct(g.pRain)}), moderate or heavier ${pct(g.pMod)}; thunderstorm risk ${g.pTs < 0.05 ? "very low" : pct(g.pTs)}.`);
+    lines.push(`Significant hazards: ${hz.length ? hz.join("; ") : "none expected"}.`);
+    lines.push(`Asset impacts: Sable-6 ${CAT[p.cats.sable.cat].toUpperCase()} (${reason(p, "sable")}). Raven-4 ${CAT[p.cats.raven.cat].toUpperCase()} (${reason(p, "raven")}).`);
+    const both = p.cats.sable.cat >= 1 && p.cats.raven.cat >= 1;
+    lines.push(`Planning implications: ${both ? "Endorian ISR degraded by weather for both assets; best period for JTF movement and forward posture with reduced detection risk." : p.cats.sable.cat === 0 && p.cats.raven.cat === 0 ? "Weather favors Endorian collection; expect full Sable-6 and Raven-4 capability, so mask JTF movement by other means." : `${p.cats.sable.cat >= 1 ? "Sable-6" : "Raven-4"} degraded by weather while ${p.cats.sable.cat >= 1 ? "Raven-4" : "Sable-6"} remains capable; plan movement for the degraded periods and assume partial coverage.`}`);
+    lines.push("");
   }
-  $("outlookNote").textContent = "Draft generated from the blend; edit before sending. The asset impacts need the J2 thresholds from the Day 2 RFI.";
-  if (!$("outlookTxt").dataset.edited) $("outlookTxt").value = lines.join("\n\n");
+  const co = periods.find(p => p.callout);
+  if (co){
+    const g = co.g;
+    lines.push("T+5 CALLOUT: WEDNESDAY 28 OCTOBER, 0600Z–1200Z");
+    lines.push(`Conditions: ${skyWords(g)}; ${g.pFog >= 0.2 ? `fog/low visibility likely early (${pct(g.pFog)}), improving through the morning; ` : ""}${compass(g.dir)} winds ${g.sust == null ? "–" : Math.round(g.sust)} kt, gusts ${g.gust == null ? "–" : Math.round(g.gust)} kt; precipitation ${pct(g.pRain)}; thunderstorms ${g.pTs < 0.05 ? "not expected" : pct(g.pTs)}; ${g.tmin == null ? "" : `temperatures ${Math.round(g.tmin)} to ${Math.round(g.tmax)} °C.`}`);
+    lines.push(`Sable-6: ${CAT[co.cats.sable.cat].toUpperCase()}: ${reason(co, "sable")}.`);
+    lines.push(`Raven-4: ${CAT[co.cats.raven.cat].toUpperCase()}: ${reason(co, "raven")}.`);
+    lines.push(`Confidence: ${S.srcs[ic].length >= 15 ? "moderate" : "low to moderate"} at 5 days; update triggers: changes in frontal timing, fog persistence, and gusts near the 30–35 kt Sable-6 mast limits.`);
+  }
+  $("outlookNote").textContent = `Built from ${(S.srcs[ic] || []).length} ETAR guidance sources against the J2 thresholds. Edit before sending; the "Regenerate" button rebuilds it.`;
+  if (!$("outlookTxt").dataset.edited) $("outlookTxt").value = lines.join("\n");
+  /* commander brief, 250 words max */
+  if (!$("briefTxt").dataset.edited){
+    const d3 = periods.filter(p => !p.callout);
+    const deg = d3.filter(p => p.cats.sable.cat >= 1 && p.cats.raven.cat >= 1).map(p => dayName(p.date).slice(0, 3));
+    const fav = d3.filter(p => p.cats.sable.cat === 0 && p.cats.raven.cat === 0).map(p => dayName(p.date).slice(0, 3));
+    const b = [];
+    const list = a => a.length > 2 ? a.slice(0, -1).join(", ") + " and " + a[a.length - 1] : a.join(" and ");
+    b.push(`BLUF: ${deg.length ? `Weather degrades both Endorian ISR assets on ${list(deg)}` : "No day degrades both Endorian ISR assets"}${fav.length ? `; ${list(fav)} favor${fav.length === 1 ? "s" : ""} Endorian collection` : ""}. T+5 0600–1200Z: Sable-6 ${CAT[co.cats.sable.cat].toUpperCase()}, Raven-4 ${CAT[co.cats.raven.cat].toUpperCase()}.`);
+    for (const p of d3){ b.push(`${p.label} (${dayName(p.date).slice(0, 10)}): ${skyWords(p.g).split(",")[0]}, rain ${pct(p.g.pRain)}, gusts ${p.g.gust == null ? "–" : Math.round(p.g.gust)} kt. Sable-6 ${CAT[p.cats.sable.cat]}, Raven-4 ${CAT[p.cats.raven.cat]}.`); }
+    b.push(`T+5 window: ${reason(co, "sable")} (Sable-6); ${reason(co, "raven")} (Raven-4).`);
+    const rec = [];
+    if (co.cats.sable.cat >= 1 || co.cats.raven.cat >= 1) rec.push(`Execute JTF movement along the Central European Mobility Corridor in the T+5 0600–1200Z window while Endorian collection is weather-degraded.`);
+    else rec.push(`T+5 0600–1200Z favors Endorian collection; use concealment, deception or an alternate window${deg.length ? ` (${deg.join("/")})` : ""} for key movement.`);
+    if (co.cats.raven.cat > co.cats.sable.cat) rec.push("Expect Sable-6 mast collection to persist when Raven-4 is grounded; prioritize counter-RF measures.");
+    rec.push("Update triggers: frontal timing shifts, fog persistence, gusts near 30–35 kt; next update T+4.");
+    b.push("RECOMMENDATIONS: " + rec.map((r, i) => `(${i + 1}) ${r}`).join(" "));
+    let txt = b.join("\n");
+    const wc = t => (t.trim().match(/\S+/g) || []).length;
+    while (wc(txt) > 250 && b.length > 3){ b.splice(1, 1); txt = b.join("\n"); }
+    $("briefTxt").value = txt;
+  }
+  $("briefCount").textContent = `${(($("briefTxt").value.trim().match(/\S+/g)) || []).length} of 250 words`;
 }
 
 /* ---------- sources & settings ---------- */
@@ -1141,7 +1316,11 @@ function bind(){
   ["rMin","rWxCode","rCeil","rTp","rAny","rOk"].forEach(id => $(id).onchange = rset);
   $("outlookTxt").oninput = e => { e.target.dataset.edited = "1"; };
   $("outlookDl").onclick = () => (S.outlookSaved = true) && download(new Blob([$("outlookTxt").value], { type:"text/plain" }), `${(prefs.team || "TEAMNAME").replace(/[^A-Za-z0-9-]/g, "")}_TFC26_ETAR-OUTLOOK_03.txt`);
-  $("outlookRegen").onclick = () => { delete $("outlookTxt").dataset.edited; renderOutlook(); };
+  $("outlookRegen").onclick = () => { delete $("outlookTxt").dataset.edited; delete $("briefTxt").dataset.edited; renderOutlook(); };
+  $("j2Thr").onchange = () => { delete $("outlookTxt").dataset.edited; delete $("briefTxt").dataset.edited; renderOutlook(); };
+  $("briefTxt").oninput = e => { e.target.dataset.edited = "1"; $("briefCount").textContent = `${((e.target.value.trim().match(/\S+/g)) || []).length} of 250 words`; };
+  $("briefToSA").onclick = () => { const dk = String(currentDay().n); texts[dk].sa = $("briefTxt").value; saveTexts(); $("sa").value = $("briefTxt").value; renderSubmission(); toast("Commander brief copied into the short answer box"); };
+  $("briefCopy").onclick = async () => { try { await navigator.clipboard.writeText($("briefTxt").value); toast("Brief copied"); } catch (e){ toast("Copy failed"); } };
   window.addEventListener("resize", () => renderMeteo());
   setInterval(renderHeader, 30000);
 }

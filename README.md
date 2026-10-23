@@ -36,8 +36,11 @@ METAR/SPECI reports once the valid window has passed.
   dew point above temperature, weather that doesn't fit the visibility or temperature, edits that
   cost expected points, stale guidance, the suspense, blank answers, the RFI format (Day 2) and the
   250-word brief limit (Day 3).
-* **Day 3 helper**: a draft ETAR Three-Day Outlook (T+3 to T+5) with the T+5 0600–1200Z callout,
-  generated from the blend, to edit and download.
+* **Day 3 helper**: scores the ETAR guidance against the J2 thresholds for Sable-6 (visibility,
+  precipitation, sustained wind, gusts, lightning, EO/IR, passive RF) and Raven-4 (visibility, surface
+  wind, precipitation, lightning, launch/recovery) for each day T+3 to T+5 and the T+5 0600–1200Z
+  window, as Favorable / Limited / Constrained with the chance of each, then drafts the Annex C outlook
+  and a commander briefing of 250 words or fewer (copyable into the short answer box).
 
 ## Setup
 1. Create an empty GitHub repo named `ThorsForecastChallenge` (no README).
